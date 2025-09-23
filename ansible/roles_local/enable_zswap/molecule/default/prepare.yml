@@ -1,0 +1,15 @@
+---
+- name: Prepare
+  hosts: all
+  tasks:
+    - name: Install required packages
+      ansible.builtin.apt:
+        update_cache: yes
+        pkg:
+          - tzdata
+          - grub2
+          - nano
+        state: present
+            
+    - name: Set timezone to UTC
+      command: ln -sf /usr/share/zoneinfo/UTC /etc/localtime

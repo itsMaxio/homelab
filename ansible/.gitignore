@@ -3,3 +3,6 @@ roles_external/
 
 host_vars/
 group_vars/
+
+molecule/default/vars.yml
+molecule/default/vars.yaml

@@ -1,0 +1,44 @@
+- name: Ensure required GRUB options are present
+  lineinfile:
+    path: /etc/default/grub
+    regexp: '^(GRUB_CMDLINE_LINUX_DEFAULT="(?:(?!{{ item }})[^"])*)(?:")'
+    line: '\1 {{ item }}"'
+    backrefs: true
+    backup: true
+  loop: "{{ enable_zswap__grub_options }}"
+
+- name: Update GRUB changes
+  ansible.builtin.command:
+    cmd: /usr/sbin/update-grub
+  environment:
+    PATH: "/usr/sbin:/usr/bin:/sbin:/bin"
+
+- name: Ensure required initram options are present
+  lineinfile:
+    path: /etc/initramfs-tools/modules 
+    regexp: '\b{{ item }}\b'
+    line: '{{ item }}'
+    insertafter: EOF
+    backup: true
+  loop: "{{ enable_zswap__initramfs_options }}"
+
+- name: Update initramfs changes
+  ansible.builtin.command:
+    cmd: /usr/sbin/update-initramfs -u
+  environment:
+    PATH: "/usr/sbin:/usr/bin:/sbin:/bin"
+
+- name: Reboot a machine and wait
+  ansible.builtin.reboot:
+
+- name: Read zswap enabled
+  ansible.builtin.command:
+    cmd: "cat /sys/module/zswap/parameters/enabled"
+  register: zswap_value
+
+- name: Check if zswap is enabled
+  ansible.builtin.assert:
+    that:
+      - zswap_value.stdout | trim == 'Y'
+    fail_msg: "File does not contain Y"
+    success_msg: "File contains Y"

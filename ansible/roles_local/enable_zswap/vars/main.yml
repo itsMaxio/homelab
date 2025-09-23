@@ -1,0 +1,12 @@
+enable_zswap__grub_options:
+  - quiet
+  - splash
+  - zswap.enabled=1
+  - zswap.compressor=lz4
+  - zswap.max_pool_percent=50
+  - zswap.zpool=z3fold
+
+enable_zswap__initramfs_options:
+  - lz4
+  - lz4_compress
+  - z3fold
