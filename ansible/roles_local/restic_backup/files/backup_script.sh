@@ -13,6 +13,7 @@ if [[ ! -r "$CONFIG_FILE" ]]; then
 fi
 
 source "$CONFIG_FILE"
+export RESTIC_REPOSITORY
 export RESTIC_PASSWORD
 export RESTIC_PROGRESS_FPS
 
@@ -24,8 +25,7 @@ fi
 LOG_FILE="$LOGS_DIR/log-$(date +"%Y-%m-%d_%H_%M").txt"
 touch "$LOG_FILE"
 
-log() 
-{
+log() {
   local newline=0
 
   if [[ "$1" = "--newline" ]]; then
@@ -56,28 +56,23 @@ find "$LOGS_DIR" -type f -name '*.txt' -printf '%T@ %p\0' |
   cut -z -d' ' -f2- |
   xargs -0 -r rm --
 
-ping_start()
-{
+ping_start(){
   curl -fsS -m 30 "$HEALTHCHECK_URL/start" >/dev/null || true
 }
 
-ping_success()
-{
+ping_success(){
   curl -fsS -m 30 "$HEALTHCHECK_URL" >/dev/null || true
 }
 
-ping_fail()
-{
+ping_fail(){
   curl -fsS -m 30 "$HEALTHCHECK_URL/fail" >/dev/null || true
 }
 
-ping_log()
-{
+ping_log(){
   curl -fsS -m 60 -H "Content-Type: text/plain" --data-binary @"$LOG_FILE" "$HEALTHCHECK_URL/log" >/dev/null || true
 }
 
-docker_compose_stop()
-{
+docker_compose_stop(){
   local service_dir="$1"
   log --newline "DOCKER_COMPOSE_STOP: Stopping: $service_dir"
   (
@@ -97,8 +92,6 @@ docker_compose_start() {
     cd "$service_dir" || return 1
 
     if ! docker compose start >>"$LOG_FILE" 2>&1; then
-      log --newline "DOCKER_COMPOSE_START: One or more services are unhealthy"
-
       check_health() {
         local service="$1"
         local status=$(docker inspect "$service" | jq -r '.[0].State.Health.Status // "nohealth"')
@@ -106,22 +99,34 @@ docker_compose_start() {
       }
 
       mapfile -t services < <(docker compose ps --quiet)
-      local max_attempts=5
 
-      for service in "${services[@]}"; do
-        local attempt=1
-        until check_health "$service"; do
-          if (( attempt >= max_attempts )); then
-            log "DOCKER_COMPOSE_START_ERROR: $service is unhealthy after $attempt attempts"
-            return 1
+      local restart_max=3
+      local health_max=5
+
+      for ((restart_attempt=1; restart_attempt<=restart_max; restart_attempt++)); do
+        log "DOCKER_COMPOSE_START: Restarting services (attempt $restart_attempt)..."
+        docker compose restart >>"$LOG_FILE" 2>&1
+
+        for ((health_attempt=1; health_attempt<=health_max; health_attempt++)); do
+          local unhealthy=0
+          for service in "${services[@]}"; do
+            if ! check_health "$service"; then
+              unhealthy=1
+              log "DOCKER_COMPOSE_START: $service is unhealthy (restart $restart_attempt, health check $health_attempt)"
+            fi
+          done
+
+          if (( unhealthy == 0 )); then
+            log --newline "DOCKER_COMPOSE_START: All services healthy in $service_dir"
+            return 0
           fi
-          log "DOCKER_COMPOSE_START: $service attempt $attempt failed, retrying in $attempt sec..."
-          sleep "$attempt"
-          ((attempt++))
+
+          sleep "$health_attempt"
         done
       done
 
-      log --newline "DOCKER_COMPOSE_START: All services healthy in $service_dir"
+      log "DOCKER_COMPOSE_START_ERROR: Some services remain unhealthy after $restart_max restarts"
+      return 1
     fi
   )
 }
