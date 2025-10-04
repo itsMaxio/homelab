@@ -6,6 +6,8 @@
 **test**
 **/configuration.yml
 **.env
+site/
+
 
 !**/0_config/*.md
 !**/example*.yaml
