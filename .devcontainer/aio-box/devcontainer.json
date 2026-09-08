@@ -1,0 +1,46 @@
+{
+  "name": "AiO Box",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "runArgs": [
+    "--name", "aio-box",
+    "--hostname", "aio-box",
+    "--env-file", ".devcontainer/aio-box/.env"
+  ],
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:4.1.0": {}
+  },
+  // "postCreateCommand": "bash /workspace/.devcontainer/aio-box/post-container-start.sh",
+  "postStartCommand": "bash /workspace/.devcontainer/aio-box/post-container-start.sh",
+  "mounts": [
+    "source=${localEnv:USERPROFILE}/.ssh,target=/root/.sshtemplate,type=bind,readonly,consistency=cached"
+  ],
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "workspaceFolder": "/workspace",
+  "containerEnv": {
+    "ANSIBLE_CONFIG": "/workspace/ansible/ansible.cfg",
+    "ANSIBLE_NAVIGATOR_CONFIG": "/workspace/ansible/ansible-navigator.yaml"
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "telemetry.telemetryLevel": "off",
+        "ansible.lightspeed.enabled": false,
+        "editor.inlineSuggest.enabled": false,
+        "github.copilot.enable": {
+          "*": false
+        }
+      },
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "redhat.ansible",
+        "hashicorp.terraform",
+        "redhat.vscode-yaml",
+        "yzhang.markdown-all-in-one"
+      ]
+    }
+  },
+  "remoteUser": "root",
+  "updateRemoteUserUID": true
+}
