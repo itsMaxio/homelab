@@ -1,14 +1,25 @@
-*.retry
-**/0_config/*
-**/inventory*
-**/tmp*
-**/docker-compose/**/docker-compose.yaml
-**test**
-**/configuration.yml
-**.env
-site/
+# devcontainers
+.env
+.env.*
+!.env.example
+.devcontainer/**/.env
+.devcontainer/**/.env.*
+!.devcontainer/**/.env.example
+docker-compose.override.yml
 
+# keys
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+known_hosts
 
-!**/0_config/*.md
-!**/example*.yaml
-!**speedtest**
+# system
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json

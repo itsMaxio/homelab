@@ -1,8 +1,24 @@
+# ansible
 collections/
 roles_external/
 
-host_vars/
-group_vars/
-
 **/molecule/default/vars.yml
 **/molecule/default/vars.yaml
+
+*.retry
+*.vault_pass*
+*.vault-pass*
+*.vault_password*
+*.vault-password*
+.vault_pass*
+.vault-pass*
+
+.molecule/
+.ansible/
+.ansible-lint
+ansible.log
+
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
