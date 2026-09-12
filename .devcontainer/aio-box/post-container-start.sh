@@ -10,3 +10,6 @@ fi
 
 find /root/.ssh -type f -exec chmod 600 {} \;
 find /root/.ssh -type d -exec chmod 700 {} \;
+
+# terraform
+terraform -install-autocomplete;

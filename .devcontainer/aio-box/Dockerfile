@@ -2,7 +2,8 @@ FROM mcr.microsoft.com/devcontainers/base:debian-12
 
 ENV DEBIAN_FRONTEND=noninteractive \
     VIRTUAL_ENV=/opt/venv \
-    PATH="/opt/venv/bin:$PATH"
+    PATH="/opt/venv/bin:$PATH" \
+    TZ="Europe/Warsaw"
 
 # install all necessary apt packages
 RUN apt-get update && \
@@ -26,12 +27,12 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # add terraform
-RUN wget -O - https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-        terraform && \
-    rm -rf /var/lib/apt/lists/*
+# RUN wget -O - https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
+#     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list && \
+#     apt-get update && \
+#     apt-get install -y --no-install-recommends \
+#         terraform && \
+#     rm -rf /var/lib/apt/lists/*
 
 # add 1password cli
 RUN curl -sS https://downloads.1password.com/linux/keys/1password.asc | \
@@ -47,6 +48,15 @@ RUN curl -sS https://downloads.1password.com/linux/keys/1password.asc | \
     sudo apt-get update && sudo apt-get install -y --no-install-recommends 1password-cli && \
     rm -rf /var/lib/apt/lists/* && \
     op --version
+
+# # add 1password cli beta
+# RUN wget "https://cache.agilebits.com/dist/1P/op2/pkg/v2.39.1-beta.01/op_linux_amd64_v2.39.1-beta.01.zip" -O op.zip && \
+#     unzip -d op op.zip && \
+#     sudo mv op/op /usr/local/bin/ && \
+#     rm -r op.zip op && \
+#     sudo groupadd -f onepassword-cli && \
+#     sudo chgrp onepassword-cli /usr/local/bin/op && \
+#     sudo chmod g+s /usr/local/bin/op
 
 # install all necessary pip packages
 RUN python3 -m venv ${VIRTUAL_ENV} && \
@@ -77,7 +87,7 @@ RUN mkdir -p /etc/bash_completion.d && \
     # molecule
     _MOLECULE_COMPLETE=bash_source molecule > /etc/bash_completion.d/molecule && \
     # terraform
-    terraform -install-autocomplete && \
+    # terraform -install-autocomplete && \
     # 1password
     op completion bash > /etc/bash_completion.d/1password
 
