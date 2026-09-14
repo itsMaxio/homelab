@@ -39,7 +39,8 @@
         "hashicorp.terraform",
         "redhat.vscode-yaml",
         "yzhang.markdown-all-in-one",
-        "samuelcolvin.jinjahtml"
+        "samuelcolvin.jinjahtml",
+        "vivaxy.vscode-conventional-commits"
       ]
     }
   },
