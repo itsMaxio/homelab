@@ -1,0 +1,8 @@
+---
+cisco_backup_enabled: true
+
+cisco_backup_dir: ""
+cisco_backup_device_role: ""
+cisco_backup_retention_limit: 10
+
+cisco_backup_timezone: "UTC"

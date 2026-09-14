@@ -1,0 +1,104 @@
+- name: "DEBUG : Backup variables"
+  ansible.builtin.debug:
+    msg:
+      - "backup_enabled: {{ cisco_backup_enabled }}"
+      - "root_dir: {{ cisco_backup_dir }}"
+      - "device_role: {{ cisco_backup_device_role }}"
+      - "retention_limit: {{ cisco_backup_retention_limit }}"
+      - "timezone: {{ cisco_backup_timezone }}"
+  tags: [never, debug]
+
+- name: "CHECKS: Assert backup variable types"
+  ansible.builtin.assert:
+    that:
+      - cisco_backup_enabled is boolean
+      - cisco_backup_dir is string
+      - cisco_backup_device_role is string
+      - cisco_backup_retention_limit is number
+      - cisco_backup_timezone is string
+    fail_msg: "One or more backup variables have incorrect data types!"
+    quiet: true
+  tags: [cisco_backup, backup, checks]
+
+- name: "CHECKS: Assert backup values"
+  ansible.builtin.assert:
+    that:
+      - cisco_backup_dir | length > 0
+      - cisco_backup_device_role | length > 0
+      - cisco_backup_retention_limit >= 1
+    fail_msg: "cisco_backup_device_role and cisco_backup_dir must be defined and not empty, and retention limit must be at least 1!"
+    quiet: true
+  when: cisco_backup_enabled | bool
+  tags: [cisco_backup, backup, checks]
+
+- name: Get current timestamp in configured timezone
+  ansible.builtin.command:
+    cmd: "date +%Y-%m-%d_%H-%M-%S"
+  environment:
+    TZ: "{{ cisco_backup_timezone }}"
+  register: _cisco_backup_time_raw
+  delegate_to: localhost
+  run_once: true
+  changed_when: false
+  when: cisco_backup_enabled | bool
+  tags: [cisco_backup, backup]
+
+- name: Set backup paths and timestamp
+  ansible.builtin.set_fact:
+    _cisco_backup_timestamp: "{{ _cisco_backup_time_raw.stdout }}"
+    _cisco_backup_dir: "{{ cisco_backup_dir }}/{{ cisco_backup_device_role }}/{{ inventory_hostname }}"
+  when: cisco_backup_enabled | bool
+  tags: [cisco_backup, backup]
+
+- name: Ensure backup directories exist
+  ansible.builtin.file:
+    path: "{{ _cisco_backup_dir }}/archive"
+    state: "directory"
+    mode: "0755"
+  delegate_to: localhost
+  run_once: false
+  when: cisco_backup_enabled | bool
+  tags: [cisco_backup, backup]
+
+- name: Retrieve running configuration from Cisco device
+  cisco.ios.ios_command:
+    commands:
+      - "show running-config"
+  register: _cisco_backup_running_config
+  changed_when: false
+  when: cisco_backup_enabled | bool
+  tags: [cisco_backup, backup]
+
+- name: Save configuration to latest and timestamped archive files
+  ansible.builtin.copy:
+    content: "{{ _cisco_backup_running_config.stdout[0] }}"
+    dest: "{{ item }}"
+    mode: "0644"
+  loop:
+    - "{{ _cisco_backup_dir }}/config_latest.cfg"
+    - "{{ _cisco_backup_dir }}/archive/config_{{ _cisco_backup_timestamp }}.cfg"
+  delegate_to: localhost
+  when: cisco_backup_enabled | bool
+  tags: [cisco_backup, backup]
+
+- name: Find existing configuration archives
+  ansible.builtin.find:
+    paths: "{{ _cisco_backup_dir }}/archive"
+    patterns: "config_*.cfg"
+  register: _cisco_backup_found_archives
+  delegate_to: localhost
+  when: cisco_backup_enabled | bool
+  tags: [cisco_backup, backup]
+
+- name: Remove oldest archive files exceeding retention limit
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: "absent"
+  loop: "{{ (_cisco_backup_found_archives.files | sort(attribute='path'))[: (_cisco_backup_found_archives.matched - cisco_backup_retention_limit)] }}"
+  loop_control:
+    label: "{{ item.path }}"
+  delegate_to: localhost
+  when:
+    - cisco_backup_enabled | bool
+    - _cisco_backup_found_archives.matched > cisco_backup_retention_limit
+  tags: [cisco_backup, backup]
