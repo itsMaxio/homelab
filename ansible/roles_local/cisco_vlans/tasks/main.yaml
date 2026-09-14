@@ -1,0 +1,60 @@
+- name: "DEBUG : VLAN raw variables"
+  ansible.builtin.debug:
+    var: cisco_vlans_vlans
+  tags: [never, debug]
+
+- name: "CHECKS: Assert VLANS variable types"
+  ansible.builtin.assert:
+    that:
+      - cisco_vlans_vlans is sequence and cisco_vlans_vlans is not string
+      - cisco_vlans_state is string
+    fail_msg: "One or more variables have incorrect data types!"
+    quiet: true
+  tags: [cisco_vlans, vlans, checks]
+
+- name: "CHECKS: Assert state value"
+  ansible.builtin.assert:
+    that:
+      - cisco_vlans_state in ["merged", "replaced", "overridden", "deleted", "gathered", "purged"]
+    fail_msg: "cisco_vlans_state must be one of: [merged, replaced, overridden, deleted, gathered, purged]"
+    quiet: true
+  tags: [cisco_vlans, vlans, checks]
+
+- name: "CHECKS: Assert VLANS values"
+  ansible.builtin.assert:
+    that:
+      - item.vlan_id | int not in cisco_vlans_reserved_ids
+      - item.vlan_id | int >= 1
+      - item.vlan_id | int <= 4094
+    fail_msg: "VLAN ID {{ item.vlan_id | default('UNDEFINED') }} is outside 1-4094 range or conflicts with reserved Cisco IDs ({{ cisco_vlans_reserved_ids }})!"
+    quiet: true
+  loop: "{{ cisco_vlans_vlans }}"
+  loop_control:
+    label: "VID {{ item.vlan_id | default('?') }}"
+  tags: [cisco_vlans, vlans, checks]
+
+- name: Prepare a final list of VLANs
+  ansible.builtin.set_fact:
+    _cisco_vlans_final: >-
+      {{
+        (cisco_vlans_vlans + cisco_vlans_reserved_vlans) | unique(attribute="vlan_id") | list
+        if cisco_vlans_state == "overridden"
+        else cisco_vlans_vlans
+      }}
+  tags: [cisco_vlans, vlans, debug]
+
+- name: "DEBUG : VLAN variables"
+  ansible.builtin.debug:
+    var: _cisco_vlans_final
+  tags: [never, debug]
+
+- name: "DEBUG : VLAN state"
+  ansible.builtin.debug:
+    var: cisco_vlans_state
+  tags: [never, debug]
+
+- name: Manage VLAN database
+  cisco.ios.ios_vlans:
+    config: "{{ _cisco_vlans_final }}"
+    state: "{{ cisco_vlans_state }}"
+  tags: [cisco_vlans, vlans]
