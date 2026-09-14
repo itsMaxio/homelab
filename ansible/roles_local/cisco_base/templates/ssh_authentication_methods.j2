@@ -1,0 +1,9 @@
+{% if cisco_base_ssh_authentication_public_key_only | default(false) | bool %}
+no ip ssh server authenticate user password
+no ip ssh server authenticate user keyboard
+ip ssh server authenticate user publickey
+{% else %}
+ip ssh server authenticate user password
+ip ssh server authenticate user keyboard
+ip ssh server authenticate user publickey
+{% endif %}

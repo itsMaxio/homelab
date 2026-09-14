@@ -1,0 +1,95 @@
+---
+- name: "DEBUG : SSH variables"
+  ansible.builtin.debug:
+    msg:
+      - "version: {{ cisco_base_ssh_version }}"
+      - "timeout: {{ cisco_base_ssh_timeout }}"
+      - "auth_retries: {{ cisco_base_ssh_auth_retries }}"
+      - "public_key_only: {{ cisco_base_ssh_authentication_public_key_only }}"
+      - "console_exec_timeout: {{ cisco_base_console_exec_timeout }}"
+      - "vty_ranges: {{ cisco_base_vty_ranges }}"
+      - "vty_exec_timeout: {{ cisco_base_vty_exec_timeout }}"
+      - "vty_acl: {{ cisco_base_vty_acl | default(None) }}"
+      - "login_block_for: {{ cisco_base_login_block_for }}"
+      - "login_attempts: {{ cisco_base_login_attempts }}"
+      - "login_within: {{ cisco_base_login_within }}"
+      - "login_quiet_acl: {{ cisco_base_login_quiet_acl | default(None) }}"
+  tags: [never, debug]
+
+- name: "CHECKS: Assert variable types"
+  ansible.builtin.assert:
+    that:
+      - cisco_base_ssh_version is number
+      - cisco_base_ssh_timeout is number
+      - cisco_base_ssh_auth_retries is number
+      - cisco_base_ssh_authentication_public_key_only is boolean
+      - cisco_base_console_exec_timeout is string
+      - cisco_base_vty_ranges is sequence and cisco_base_vty_ranges is not string
+      - cisco_base_vty_exec_timeout is string
+      - cisco_base_vty_acl is none or cisco_base_vty_acl is string
+      - cisco_base_login_block_for is number
+      - cisco_base_login_attempts is number
+      - cisco_base_login_within is number
+      - cisco_base_login_quiet_acl is none or cisco_base_login_quiet_acl is string
+    fail_msg: "One or more variables have incorrect data types!"
+    quiet: true
+  tags: [cisco_base, ssh, checks]
+
+- name: "CHECKS: Assert SSH values"
+  ansible.builtin.assert:
+    that:
+      - cisco_base_ssh_version in [1, 2]
+      - cisco_base_ssh_timeout | int > 0
+      - cisco_base_ssh_auth_retries | int > 0
+      - cisco_base_login_block_for | int >= 0
+      - cisco_base_login_attempts | int > 0
+      - cisco_base_login_within | int > 0
+    fail_msg: "Invalid SSH parameters detected!"
+    quiet: true
+  tags: [cisco_base, ssh, checks]
+
+- name: "CHECKS: Assert SSH public key requirements"
+  ansible.builtin.assert:
+    that:
+      - (cisco_base_local_users | default([]) | selectattr('ssh_key', 'defined') | selectattr('ssh_key') | list | length) > 0
+    fail_msg: "cisco_base_ssh_authentication_public_key_only is true, but no user has an SSH key defined!"
+    quiet: true
+  when: cisco_base_ssh_authentication_public_key_only | bool
+  tags: [cisco_base, ssh, checks]
+
+- name: Set SSH version and timers
+  cisco.ios.ios_config:
+    lines:
+      - "ip ssh version {{ cisco_base_ssh_version }}"
+      - "ip ssh time-out {{ cisco_base_ssh_timeout }}"
+      - "ip ssh authentication-retries {{ cisco_base_ssh_auth_retries }}"
+    defaults: true
+  tags: [cisco_base, ssh]
+
+- name: Set SSH authentication methods
+  cisco.ios.ios_config:
+    content: "{{ lookup('ansible.builtin.template', 'ssh_authentication_methods.j2') }}"
+    defaults: true
+  tags: [cisco_base, ssh]
+
+- name: Configure console line
+  cisco.ios.ios_config:
+    lines:
+      - "exec-timeout {{ cisco_base_console_exec_timeout }}"
+      - "logging synchronous"
+    parents: "line con 0"
+    defaults: true
+  tags: [cisco_base, ssh]
+
+- name: Configure VTY lines
+  cisco.ios.ios_config:
+    content: "{{ lookup('ansible.builtin.template', 'vty_lines.j2') }}"
+    defaults: true
+  tags: [cisco_base, ssh]
+
+- name: Enable login brute-force protection
+  cisco.ios.ios_config:
+    content: "{{ lookup('ansible.builtin.template', 'login_block_for.j2') }}"
+    defaults: true
+  when: cisco_base_login_block_for | int > 0
+  tags: [cisco_base, ssh]

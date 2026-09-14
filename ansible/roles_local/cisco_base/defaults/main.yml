@@ -1,0 +1,44 @@
+---
+cisco_base_hostname: "{{ inventory_hostname_short }}"
+cisco_base_domain_name: null
+cisco_base_name_servers: []
+cisco_base_dns_lookup_enabled: false
+
+cisco_base_jumbo_mtu_size: 1500
+cisco_base_reload_device: false
+
+cisco_base_ssh_version: 2
+cisco_base_ssh_timeout: 60
+cisco_base_ssh_auth_retries: 3
+cisco_base_ssh_authentication_public_key_only: false
+
+cisco_base_console_exec_timeout: "10 0"
+cisco_base_vty_ranges:
+  - "0 4"
+  - "5 15"
+cisco_base_vty_exec_timeout: "10 0"
+cisco_base_vty_acl: null
+
+cisco_base_login_block_for: 120
+cisco_base_login_attempts: 5
+cisco_base_login_within: 60
+cisco_base_login_quiet_acl: null
+
+cisco_base_local_users: []
+cisco_base_user_update_password: false
+
+cisco_base_banner_login: null
+cisco_base_banner_motd: null
+
+cisco_base_password_encryption_enabled: true
+cisco_base_tcp_keepalives_enabled: true
+cisco_base_timestamps_enabled: true
+cisco_base_http_server_enabled: false
+cisco_base_source_route_enabled: false
+cisco_base_finger_enabled: false
+cisco_base_pad_enabled: false
+cisco_base_cdp_enabled: true
+
+cisco_base_extra_hardening_lines: []
+
+cisco_base_save_config: true

@@ -1,0 +1,32 @@
+---
+- name: "DEBUG : Banner variables"
+  ansible.builtin.debug:
+    msg:
+      - "banner_login: {{ cisco_base_banner_login | default(None) }}"
+      - "banner_motd: {{ cisco_base_banner_motd | default(None) }}"
+  tags: [never, debug]
+
+- name: "CHECKS: Assert banner values"
+  ansible.builtin.assert:
+    that:
+      - cisco_base_banner_login is none or cisco_base_banner_login is string
+      - cisco_base_banner_motd is none or cisco_base_banner_motd is string
+    fail_msg: "Banners must be strings or null!"
+    quiet: true
+  tags: [cisco_base, banners, checks]
+
+- name: Configure login banner
+  cisco.ios.ios_banner:
+    banner: login
+    text: "{{ cisco_base_banner_login }}"
+    state: present
+  when: cisco_base_banner_login is not none and cisco_base_banner_login | length > 0
+  tags: [cisco_base, banners]
+
+- name: Configure MOTD banner
+  cisco.ios.ios_banner:
+    banner: motd
+    text: "{{ cisco_base_banner_motd }}"
+    state: present
+  when: cisco_base_banner_motd is not none and cisco_base_banner_motd | length > 0
+  tags: [cisco_base, banners]

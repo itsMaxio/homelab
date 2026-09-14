@@ -1,0 +1,22 @@
+{% if cisco_base_timestamps_enabled | default(true) %}
+    service timestamps log datetime msec localtime show-timezone
+    service timestamps debug datetime msec localtime show-timezone
+{% else %}
+    no service timestamps log
+    no service timestamps debug
+{% endif %}
+
+{{ '' if cisco_base_password_encryption_enabled | default(true) else 'no ' }}service password-encryption
+
+{{ '' if cisco_base_tcp_keepalives_enabled | default(true) else 'no ' }}service tcp-keepalives-in
+{{ '' if cisco_base_tcp_keepalives_enabled | default(true) else 'no ' }}service tcp-keepalives-out
+
+{{ '' if cisco_base_http_server_enabled | default(false) else 'no ' }}ip http server
+{{ '' if cisco_base_source_route_enabled | default(false) else 'no ' }}ip source-route
+{{ '' if cisco_base_finger_enabled | default(false) else 'no ' }}ip finger
+{{ '' if cisco_base_pad_enabled | default(false) else 'no ' }}service pad
+{{ '' if cisco_base_cdp_enabled | default(false) else 'no ' }}cdp run
+
+{% for line in cisco_base_extra_hardening_lines | default([]) %}
+    {{ line }}
+{% endfor %}

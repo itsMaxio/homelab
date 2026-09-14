@@ -1,0 +1,53 @@
+---
+- name: "DEBUG : Users variables"
+  ansible.builtin.debug:
+    msg:
+      - "user_count: {{ cisco_base_local_users | length }}"
+      - "local_users: {{ cisco_base_local_users }}"
+      - "update_password: {{ cisco_base_user_update_password }}"
+  tags: [never, debug]
+
+- name: "CHECKS: Assert variable types"
+  ansible.builtin.assert:
+    that:
+      - cisco_base_local_users is sequence and cisco_base_local_users is not string
+      - cisco_base_user_update_password is boolean
+    fail_msg: "One or more variables have incorrect data types!"
+    quiet: true
+  tags: [cisco_base, users, checks]
+
+- name: "CHECKS: Assert local users exist"
+  ansible.builtin.assert:
+    that:
+      - cisco_base_local_users | length > 0
+    fail_msg: "cisco_base_local_users must contain at least one user to prevent lockout!"
+    quiet: true
+  tags: [cisco_base, users, checks]
+
+- name: Manage local users
+  cisco.ios.ios_user:
+    name: "{{ item.name }}"
+    configured_password: "{{ item.plain_password | default(omit) }}"
+    update_password: "{{ 'always' if (cisco_base_user_update_password | default(false)) else 'on_create' }}"
+    sshkey: "{{ [item.ssh_key] if item.ssh_key is defined else omit }}"
+    purge_keys: true
+    privilege: "{{ item.privilege | default(15) }}"
+    state: "{{ item.state | default('present') }}"
+  loop: "{{ cisco_base_local_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  tags: [cisco_base, users]
+
+- name: Prepare user list for purge
+  ansible.builtin.set_fact:
+    purge_user_list: "{{ purge_user_list | default([]) + [{'name': item.name}] }}"
+  loop: "{{ cisco_base_local_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  tags: [cisco_base, users]
+
+- name: Purge unmanaged local users
+  cisco.ios.ios_user:
+    aggregate: "{{ purge_user_list }}"
+    purge: true
+  tags: [cisco_base, users]

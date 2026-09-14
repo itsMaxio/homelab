@@ -1,0 +1,4 @@
+login block-for {{ cisco_base_login_block_for }} attempts {{ cisco_base_login_attempts }} within {{ cisco_base_login_within }}
+{% if cisco_base_login_quiet_acl %}
+login quiet-mode access-class {{ cisco_base_login_quiet_acl }}
+{% endif %}

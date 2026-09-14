@@ -1,0 +1,9 @@
+{% for vty_range in cisco_base_vty_ranges %}
+line vty {{ vty_range }}
+ exec-timeout {{ cisco_base_vty_exec_timeout }}
+ transport input ssh
+ login local
+{% if cisco_base_vty_acl %}
+ access-class {{ cisco_base_vty_acl }} in
+{% endif %}
+{% endfor %}

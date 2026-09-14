@@ -1,0 +1,3 @@
+---
+cisco_base_rsa_regex_ios_xe: 'Modulus Size\s*:\s*{{ cisco_base_rsa_key_size }}\s*bits'
+cisco_base_rsa_regex_classic_ios: '{{ cisco_base_hostname }}.*\s+{{ cisco_base_rsa_key_size }}'

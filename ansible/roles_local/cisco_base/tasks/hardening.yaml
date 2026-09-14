@@ -1,0 +1,36 @@
+---
+- name: "DEBUG : Hardening variables"
+  ansible.builtin.debug:
+    msg:
+      - "timestamps: {{ cisco_base_timestamps_enabled }}"
+      - "password_encryption: {{ cisco_base_password_encryption_enabled }}"
+      - "tcp_keepalives: {{ cisco_base_tcp_keepalives_enabled }}"
+      - "http_server: {{ cisco_base_http_server_enabled }}"
+      - "source_route: {{ cisco_base_source_route_enabled }}"
+      - "finger: {{ cisco_base_finger_enabled }}"
+      - "pad: {{ cisco_base_pad_enabled }}"
+      - "cdp: {{ cisco_base_cdp_enabled }}"
+      - "extra_hardening_lines: {{ cisco_base_extra_hardening_lines }}"
+  tags: [never, debug]
+
+- name: "CHECKS: Assert variable types"
+  ansible.builtin.assert:
+    that:
+      - cisco_base_timestamps_enabled is boolean
+      - cisco_base_password_encryption_enabled is boolean
+      - cisco_base_tcp_keepalives_enabled is boolean
+      - cisco_base_http_server_enabled is boolean
+      - cisco_base_source_route_enabled is boolean
+      - cisco_base_finger_enabled is boolean
+      - cisco_base_pad_enabled is boolean
+      - cisco_base_cdp_enabled is boolean
+      - cisco_base_extra_hardening_lines is sequence and cisco_base_extra_hardening_lines is not string
+    fail_msg: "One or more variables have incorrect data types!"
+    quiet: true
+  tags: [cisco_base, hardening, checks]
+
+- name: Configure global services hardening
+  cisco.ios.ios_config:
+    content: "{{ lookup('ansible.builtin.template', 'hardening_disable_services.j2') }}"
+    defaults: true
+  tags: [cisco_base, hardening]
