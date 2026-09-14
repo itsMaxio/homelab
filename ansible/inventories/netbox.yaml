@@ -1,0 +1,21 @@
+plugin: netbox.netbox.nb_inventory
+
+validate_certs: false
+
+config_context: true
+# flatten_custom_fields: true
+# flatten_config_context: true
+group_names_raw: true
+interfaces: true
+
+group_by:
+  - device_roles
+  - platforms
+  - tags
+
+device_query_filters:
+  - has_primary_ip: true
+
+compose:
+  ansible_host: primary_ip4.address.split('/')[0]
+  ansible_user: config_context.ansible_user | default('')
