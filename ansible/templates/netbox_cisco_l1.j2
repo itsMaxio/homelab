@@ -1,0 +1,13 @@
+{% for interface in interfaces | default([], true) %}
+- name: "{{ interface.name }}"
+  enabled: {{ interface.enabled | default(true) | bool | lower }}
+{% if interface.description is defined and interface.description | trim | length > 0 %}
+  description: "{{ interface.description }}"
+{% endif %}
+{% if interface.mtu is defined and interface.mtu is not none %}
+  mtu: {{ interface.mtu }}
+{% endif %}
+{% if interface.duplex is defined and interface.duplex is not none %}
+  duplex: "{{ interface.duplex.value if interface.duplex is mapping else interface.duplex }}"
+{% endif %}
+{% endfor %}

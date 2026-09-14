@@ -1,0 +1,28 @@
+{% set virtual_interfaces = interfaces | selectattr("type.value", "equalto", "virtual") | list %}
+{% set non_virtual_interfaces = interfaces | rejectattr("type.value", "equalto", "virtual") | list %}
+
+{% for interface in non_virtual_interfaces | default([], true) %}
+
+{% set mode = interface.mode.value | default(none) %}
+{% if mode in ["access", "tagged"] %}
+- name: "{{ interface.name }}"
+{% if mode == "access" %}
+  mode: access
+{% if interface.untagged_vlan is defined and interface.untagged_vlan is not none %}
+  access:
+    vlan: {{ interface.untagged_vlan.vid }}
+{% endif %}
+{% elif mode == "tagged" %}
+  mode: trunk
+  trunk:
+    encapsulation: dot1q
+{% if interface.untagged_vlan is defined and interface.untagged_vlan is not none %}
+    native_vlan: {{ interface.untagged_vlan.vid }}
+{% endif %}
+{% if interface.tagged_vlans is defined and interface.tagged_vlans | length > 0 %}
+    allowed_vlans: "{{ interface.tagged_vlans | map(attribute="vid") | join(",") }}"
+{% endif %}
+{% endif %}
+{% endif %}
+
+{% endfor %}

@@ -1,0 +1,22 @@
+{% set untagged_vlans = interfaces
+  | default([])
+  | selectattr('untagged_vlan')
+  | map(attribute='untagged_vlan')
+  | list %}
+
+{% set tagged_vlans = interfaces
+  | default([])
+  | selectattr('tagged_vlans')
+  | map(attribute='tagged_vlans')
+  | flatten
+  | list %}
+
+{% set all_vlans = (untagged_vlans + tagged_vlans)
+  | unique(attribute='vid') %}
+
+{% for vlan in all_vlans %}
+- vlan_id: {{ vlan.vid }}
+  name: "{{ vlan.name }}"
+  state: active
+  shutdown: disabled
+{% endfor %}

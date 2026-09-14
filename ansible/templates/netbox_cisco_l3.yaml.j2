@@ -1,0 +1,53 @@
+{% set result = [] %}
+{% set virtual_interfaces = interfaces | selectattr("type.value", "equalto", "virtual") | list %}
+
+{% for interface in virtual_interfaces %}
+  {% if interface.ip_addresses is defined and interface.ip_addresses | length > 0 %}
+    {% set ipv4_addresses = interface.ip_addresses | selectattr('family.value', 'defined') | selectattr('family.value', 'equalto', 4) | list %}
+    {% set ipv6_addresses = interface.ip_addresses | selectattr('family.value', 'defined') | selectattr('family.value', 'equalto', 6) | list %}
+
+    {% if ipv4_addresses | length > 0 or ipv6_addresses | length > 0 %}
+      {% set interface_entry = {'name': interface.name} %}
+
+      {% if ipv4_addresses | length > 0 %}
+        {% set primary_ip4_address = primary_ip4 if primary_ip4 is defined else none %}
+        {% set matching_primary_addresses = ipv4_addresses | selectattr('address', 'equalto', primary_ip4_address) | list %}
+        {% set non_secondary_addresses = [] %}
+        {% for ipv4_address in ipv4_addresses %}
+          {% set ip_role_value = ipv4_address.role.value if (ipv4_address.role is defined and ipv4_address.role is mapping) else none %}
+          {% if ip_role_value != 'secondary' %}
+            {% set _ = non_secondary_addresses.append(ipv4_address) %}
+          {% endif %}
+        {% endfor %}
+
+        {% if matching_primary_addresses | length > 0 %}
+          {% set main_ipv4_address = matching_primary_addresses[0] %}
+        {% elif non_secondary_addresses | length > 0 %}
+          {% set main_ipv4_address = non_secondary_addresses[0] %}
+        {% else %}
+          {% set main_ipv4_address = ipv4_addresses[0] %}
+        {% endif %}
+
+        {% set ipv4_list = [{'address': main_ipv4_address.address}] %}
+        {% set secondary_ipv4_addresses = ipv4_addresses | rejectattr('address', 'equalto', main_ipv4_address.address) | list %}
+        {% for secondary_address in secondary_ipv4_addresses %}
+          {% set _ = ipv4_list.append({'address': secondary_address.address, 'secondary': true}) %}
+        {% endfor %}
+
+        {% set _ = interface_entry.update({'ipv4': ipv4_list}) %}
+      {% endif %}
+
+      {% if ipv6_addresses | length > 0 %}
+        {% set ipv6_list = [] %}
+        {% for ipv6_address in ipv6_addresses %}
+          {% set _ = ipv6_list.append({'address': ipv6_address.address}) %}
+        {% endfor %}
+        {% set _ = interface_entry.update({'ipv6': ipv6_list}) %}
+      {% endif %}
+
+      {% set _ = result.append(interface_entry) %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+{{ result | to_nice_yaml(indent=2) }}
