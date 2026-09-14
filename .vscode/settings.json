@@ -1,5 +1,7 @@
 {
+    "conventionalCommits.gitmoji": false,
     "conventionalCommits.scopes": [
-        "devcontainer"
+        "devcontainer",
+        "ansible"
     ]
 }
