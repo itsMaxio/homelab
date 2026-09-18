@@ -13,8 +13,9 @@ group_by:
   - platforms
   - tags
 
-device_query_filters:
+query_filters:
   - has_primary_ip: true
+  - tag: ansible-managed
 
 compose:
   ansible_host: primary_ip4.address.split('/')[0]
