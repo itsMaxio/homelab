@@ -1,0 +1,8 @@
+---
+cisco_interfaces_l1_reserved:
+  - name: Vlan1
+    enabled: false
+
+cisco_interfaces_l3_reserved:
+  - name: Vlan1
+    autostate: true

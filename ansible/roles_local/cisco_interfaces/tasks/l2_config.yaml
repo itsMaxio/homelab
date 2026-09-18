@@ -1,0 +1,6 @@
+---
+- name: Configure L2 interface settings
+  cisco.ios.ios_l2_interfaces:
+    config: "{{ cisco_interfaces_l2 }}"
+    state: "{{ cisco_interfaces_state }}"
+  tags: [cisco_interfaces, l2]

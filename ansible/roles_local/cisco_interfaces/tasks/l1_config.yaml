@@ -1,0 +1,21 @@
+---
+- name: Prepare a final list of L1 interfaces
+  ansible.builtin.set_fact:
+    _cisco_interfaces_l1_final: >-
+      {{
+        (cisco_interfaces_l1 + cisco_interfaces_l1_reserved) | unique(attribute='name') | list
+        if cisco_interfaces_state == 'overridden'
+        else cisco_interfaces_l1
+      }}
+  tags: [cisco_interfaces, l1, debug]
+
+- name: "DEBUG : Interfaces L1 final variables"
+  ansible.builtin.debug:
+    var: _cisco_interfaces_l1_final
+  tags: [never, debug]
+
+- name: Configure L1 interface settings
+  cisco.ios.ios_interfaces:
+    config: "{{ _cisco_interfaces_l1_final }}"
+    state: "{{ cisco_interfaces_state }}"
+  tags: [cisco_interfaces, l1]

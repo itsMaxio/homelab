@@ -1,0 +1,6 @@
+---
+cisco_interfaces_l1: []
+cisco_interfaces_l2: []
+cisco_interfaces_l3: []
+
+cisco_interfaces_state: merged

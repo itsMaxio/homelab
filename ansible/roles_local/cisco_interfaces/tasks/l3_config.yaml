@@ -1,0 +1,22 @@
+---
+- name: Prepare a final list of L3 interfaces
+  ansible.builtin.set_fact:
+    _cisco_interfaces_l3_final: >-
+      {{
+        (cisco_interfaces_l3 + cisco_interfaces_l3_reserved) | unique(attribute='name') | list
+        if cisco_interfaces_state == 'overridden'
+        else cisco_interfaces_l3
+      }}
+  tags: [cisco_interfaces, l3, debug]
+
+- name: "DEBUG : Interfaces L3 final variables"
+  ansible.builtin.debug:
+    var: _cisco_interfaces_l3_final
+  tags: [never, debug]
+
+
+- name: Configure L3 settings
+  cisco.ios.ios_l3_interfaces:
+    config: "{{ _cisco_interfaces_l3_final }}"
+    state: "{{ cisco_interfaces_state }}"
+  tags: [cisco_interfaces, l3]

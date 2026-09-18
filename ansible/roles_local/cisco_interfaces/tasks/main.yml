@@ -1,0 +1,46 @@
+---
+- name: "DEBUG : Interfaces L1 raw variables"
+  ansible.builtin.debug:
+    var: cisco_interfaces_l1
+  tags: [never, debug]
+
+- name: "DEBUG : Interfaces L2 raw variables"
+  ansible.builtin.debug:
+    var: cisco_interfaces_l2
+  tags: [never, debug]
+
+- name: "DEBUG : Interfaces L3 raw variables"
+  ansible.builtin.debug:
+    var: cisco_interfaces_l3
+  tags: [never, debug]
+
+- name: "CHECKS: Assert interfaces variable types"
+  ansible.builtin.assert:
+    that:
+      - cisco_interfaces_l1 is sequence and cisco_interfaces_l1 is not string
+      - cisco_interfaces_l2 is sequence and cisco_interfaces_l2 is not string
+      - cisco_interfaces_l3 is sequence and cisco_interfaces_l3 is not string
+      - cisco_interfaces_state is string
+    fail_msg: "One or more variables have incorrect data types!"
+    quiet: true
+  tags: [cisco_interfaces, interfaces, checks]
+
+- name: "CHECKS: Assert state value"
+  ansible.builtin.assert:
+    that:
+      - cisco_interfaces_state in ["merged", "replaced", "overridden", "deleted", "gathered", "purged"]
+    fail_msg: "cisco_interfaces_state must be one of: [merged, replaced, overridden, deleted, gathered, purged]"
+    quiet: true
+  tags: [cisco_interfaces, interfaces, checks]
+
+- name: Manage L1 settings
+  ansible.builtin.include_tasks: l1_config.yaml
+  tags: [cisco_interfaces, l1, debug]
+
+- name: Manage L2 settings
+  ansible.builtin.include_tasks: l2_config.yaml
+  tags: [cisco_interfaces, l2]
+
+- name: Manage L3 settings
+  ansible.builtin.include_tasks: l3_config.yaml
+  tags: [cisco_interfaces, l3]
