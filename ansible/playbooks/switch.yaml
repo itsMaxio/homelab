@@ -1,0 +1,120 @@
+---
+- name: Configure settings on Cisco switches
+  hosts: switch:&cisco-ios:&ansible-managed
+  gather_facts: false
+  vars:
+    ansible_connection: ansible.netcommon.network_cli
+    ansible_network_os: cisco.ios.ios
+    ansible_become: true
+    ansible_become_method: enable
+
+  pre_tasks:
+    - name: 'DEBUG : Host connection info'
+      ansible.builtin.debug:
+        msg:
+          - "inventory_hostname: {{ inventory_hostname }}"
+          - "ansible_host: {{ ansible_host | default(inventory_hostname) }}"
+          - "ansible_user: {{ ansible_user | default(None) }}"
+          - "ansible_port: {{ ansible_port | default(22) }}"
+      tags: [never, debug]
+
+    - name: 'DEBUG : Cisco IOS execution settings'
+      ansible.builtin.debug:
+        msg:
+          - "ansible_network_os: {{ ansible_network_os | default(None) }}"
+          - "ansible_connection: {{ ansible_connection | default(None) }}"
+          - "ansible_become: {{ ansible_become | default(None) }}"
+          - "ansible_become_method: {{ ansible_become_method | default(None) }}"
+          - "network_cli_ssh_type: {{ ansible_network_cli_ssh_type | default('auto') }}"
+          - "command_timeout: {{ ansible_command_timeout | default('30s (default)') }}"
+          - "connect_timeout: {{ ansible_connect_timeout | default('30s (default)') }}"
+          - "ssh_args: {{ ansible_ssh_common_args | default(None) }}"
+          - "python_interpreter: {{ ansible_python_interpreter | default('system default') }}"
+      tags: [never, debug]
+
+    - name: Derive VLAN list from NetBox interface data
+      ansible.builtin.set_fact:
+        netbox_vlans: "{{ lookup('ansible.builtin.template', '../templates/netbox_vlans.j2') | from_yaml | default([], true) }}"
+      tags: [never, cisco_vlans, vlans, debug]
+
+    - name: Derive L1 interface config from NetBox
+      ansible.builtin.set_fact:
+        netbox_cisco_l1: "{{ lookup('ansible.builtin.template', '../templates/netbox_cisco_l1.j2') | from_yaml | default([], true) }}"
+      tags: [never, cisco_interfaces, l1, debug]
+
+    - name: Derive L2 interface config from NetBox
+      ansible.builtin.set_fact:
+        netbox_cisco_l2: "{{ lookup('ansible.builtin.template', '../templates/netbox_cisco_l2.yaml.j2') | from_yaml | default([], true) }}"
+      tags: [never, cisco_interfaces, l2, debug]
+
+    - name: Derive L3 interface config from NetBox
+      ansible.builtin.set_fact:
+        netbox_cisco_l3: "{{ lookup('ansible.builtin.template', '../templates/netbox_cisco_l3.yaml.j2') | from_yaml | default([], true) }}"
+      tags: [never, cisco_interfaces, l3, debug]
+
+  roles:
+    - role: cisco_backup
+      vars:
+        cisco_backup_enabled: "{{ config_context[0].backup.enabled }}"
+        cisco_backup_retention_limit: "{{ config_context[0].backup.retention }}"
+        cisco_backup_dir: "{{ config_context[0].backup.location }}"
+        cisco_backup_device_role: "{{ device_roles[0] }}"
+        cisco_backup_timezone: "{{ config_context[0].backup.timezone }}"
+
+    - role: cisco_base
+      vars:
+        cisco_base_hostname: "{{ inventory_hostname }}"
+        cisco_base_domain_name: "{{ config_context[0].system.domain_name }}"
+        cisco_base_dns_lookup_enabled: "{{ config_context[0].system.dns_lookup }}"
+        cisco_base_name_servers: "{{ config_context[0].system.name_servers }}"
+
+        # MTU
+        cisco_base_jumbo_mtu_size: "{{ config_context[0].mtu.size }}"
+        cisco_base_reload_device: "{{ config_context[0].mtu.reload_device }}"
+
+        # local users
+        cisco_base_local_users: "{{ config_context[0].users.accounts }}"
+        cisco_base_user_update_password: "{{ config_context[0].users.update_password }}"
+
+        # SSH settings
+        cisco_base_ssh_version: "{{ config_context[0].ssh.version }}"
+        cisco_base_ssh_timeout: "{{ config_context[0].ssh.timeout }}"
+        cisco_base_ssh_auth_retries: "{{ config_context[0].ssh.auth_retries }}"
+        cisco_base_ssh_authentication_public_key_only: "{{ config_context[0].ssh.public_key_only }}"
+
+        # terminal lines
+        cisco_base_console_exec_timeout: "{{ config_context[0].access.console_timeout }}"
+        cisco_base_vty_exec_timeout: "{{ config_context[0].access.vty_timeout }}"
+        cisco_base_vty_ranges: "{{ config_context[0].access.vty_ranges }}"
+        cisco_base_vty_acl: "{{ config_context[0].access.vty_acl }}"
+        cisco_base_login_block_for: "{{ config_context[0].access.login_block_for }}"
+        cisco_base_login_attempts: "{{ config_context[0].access.login_attempts }}"
+        cisco_base_login_within: "{{ config_context[0].access.login_within }}"
+        cisco_base_login_quiet_acl: "{{ config_context[0].access.login_quiet_acl }}"
+
+        # service hardening
+        cisco_base_password_encryption_enabled: "{{ config_context[0].hardening.password_encryption }}"
+        cisco_base_tcp_keepalives_enabled: "{{ config_context[0].hardening.tcp_keepalives }}"
+        cisco_base_timestamps_enabled: "{{ config_context[0].hardening.timestamps }}"
+        cisco_base_http_server_enabled: "{{ config_context[0].hardening.http_server }}"
+        cisco_base_source_route_enabled: "{{ config_context[0].hardening.source_route }}"
+        cisco_base_finger_enabled: "{{ config_context[0].hardening.finger }}"
+        cisco_base_pad_enabled: "{{ config_context[0].hardening.pad }}"
+        cisco_base_cdp_enabled: "{{ config_context[0].hardening.cdp }}"
+        cisco_base_extra_hardening_lines: "{{ config_context[0].hardening.extra_lines }}"
+
+        # banners
+        cisco_base_banner_login: "{{ config_context[0].banners.login }}"
+        cisco_base_banner_motd: "{{ config_context[0].banners.motd }}"
+
+    - role: cisco_vlans
+      vars:
+        cisco_vlans_vlans: "{{ netbox_vlans }}"
+        cisco_vlans_state: "{{ config_context[0].vlans_state }}"
+
+    - role: cisco_interfaces
+      vars:
+        cisco_interfaces_l1: "{{ netbox_cisco_l1 }}"
+        cisco_interfaces_l2: "{{ netbox_cisco_l2 }}"
+        cisco_interfaces_l3: "{{ netbox_cisco_l3 }}"
+        cisco_interfaces_state: "{{ config_context[0].cisco_interfaces_state }}"
