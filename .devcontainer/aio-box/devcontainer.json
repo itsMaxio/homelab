@@ -6,10 +6,10 @@
   "runArgs": [
     "--name", "aio-box",
     "--hostname", "aio-box",
-    "--env-file", "./.env"
+    "--env-file", "${localWorkspaceFolder}/.env"
   ],
   "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:4.1.0": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:4.1.1": {},
     "ghcr.io/devcontainers/features/terraform:1.5.0": {}
   },
   // "postCreateCommand": "bash /workspace/.devcontainer/aio-box/post-container-start.sh",
