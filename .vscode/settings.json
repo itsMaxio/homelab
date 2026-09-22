@@ -3,5 +3,24 @@
     "conventionalCommits.scopes": [
         "devcontainer",
         "ansible"
+    ],
+    "python.analysis.diagnosticMode": "openFilesOnly",
+    "python.analysis.indexing": false,
+    "python.analysis.autoImportCompletions": false,
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.exclude": [
+        "**/__pycache__",
+        "**/.pytest_cache",
+        "**/venv",
+        "**/.venv",
+        "/opt/venv",
+        "**/.ansible",
+        "**/collections",
+        "**/tests/data/**"
+    ],
+    "python.defaultInterpreterPath": "/opt/venv/bin/python",
+    "python.analysis.completeFunctionParens": true,
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/ansible/filter_plugins"
     ]
 }
