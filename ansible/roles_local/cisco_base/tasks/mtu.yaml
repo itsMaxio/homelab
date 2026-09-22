@@ -4,7 +4,7 @@
     msg:
       - "jumbo_mtu_size: {{ cisco_base_jumbo_mtu_size }}"
       - "reload_device: {{ cisco_base_reload_device | default(false) }}"
-  tags: [never, debug]
+  tags: [never, mtu:debug, debug]
 
 - name: "CHECKS: Assert MTU variable types"
   ansible.builtin.assert:
@@ -13,7 +13,7 @@
       - cisco_base_reload_device is boolean
     fail_msg: "One or more MTU variables have incorrect data types!"
     quiet: true
-  tags: [cisco_base, mtu, checks]
+  tags: [mtu, mtu:checks checks]
 
 - name: "CHECKS: Assert MTU values"
   ansible.builtin.assert:
@@ -22,7 +22,7 @@
       - cisco_base_jumbo_mtu_size <= 9198
     fail_msg: "cisco_base_jumbo_mtu_size must be between 1500 and 9198!"
     quiet: true
-  tags: [cisco_base, mtu, checks]
+  tags: [mtu, mtu:checks, checks]
 
 - name: Check current Jumbo MTU value
   cisco.ios.ios_command:
@@ -30,7 +30,7 @@
       - "show system mtu"
   register: _jumbo_mtu_value
   changed_when: false
-  tags: [cisco_base, mtu]
+  tags: [mtu]
 
 - name: Configure Jumbo MTU settings
   cisco.ios.ios_config:
@@ -38,4 +38,4 @@
       - "system mtu jumbo {{ cisco_base_jumbo_mtu_size }}"
   when: "('System Jumbo MTU size is ' ~ cisco_base_jumbo_mtu_size | string ~ ' bytes') not in _jumbo_mtu_value.stdout[0]"
   notify: Reload device
-  tags: [cisco_base, mtu]
+  tags: [mtu]

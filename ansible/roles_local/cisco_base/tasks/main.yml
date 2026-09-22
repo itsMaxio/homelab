@@ -1,25 +1,24 @@
 ---
 - name: System task list include
   ansible.builtin.include_tasks: system.yaml
-  tags: [cisco_base, system, checks, debug]
+  tags: [system, system:checks, system:debug, checks, debug]
 
 - name: MTU task list include
   ansible.builtin.include_tasks: mtu.yaml
-  tags: [cisco_base, mtu, checks, debug]
+  tags: [mtu, mtu:checks, mtu:debug, checks, debug]
 
 - name: Users task list include
   ansible.builtin.include_tasks: users.yaml
-  tags: [cisco_base, users, checks, debug]
+  tags: [users, users:checks, users:debug, checks, debug]
 
 - name: SSH task list include
   ansible.builtin.include_tasks: ssh.yaml
-  tags: [cisco_base, ssh, checks, debug]
+  tags: [ssh, ssh:checks, ssh:debug, checks, debug]
 
 - name: Banners task list include
   ansible.builtin.include_tasks: banners.yaml
-  when: (cisco_base_banner_login is not none) or (cisco_base_banner_motd is not none)
-  tags: [cisco_base, banners, checks, debug]
+  tags: [banners, banners:checks, banners:debug, checks, debug]
 
 - name: Hardening task list include
   ansible.builtin.include_tasks: hardening.yaml
-  tags: [cisco_base, hardening, checks, debug]
+  tags: [hardening, hardening:checks, hardening:debug, checks, debug]

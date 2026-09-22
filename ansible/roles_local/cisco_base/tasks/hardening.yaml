@@ -11,7 +11,7 @@
       - "pad: {{ cisco_base_pad_enabled }}"
       - "cdp: {{ cisco_base_cdp_enabled }}"
       - "extra_hardening_lines: {{ cisco_base_extra_hardening_lines }}"
-  tags: [never, debug]
+  tags: [never, hardening:debug, debug]
 
 - name: "CHECKS: Assert variable types"
   ansible.builtin.assert:
@@ -27,10 +27,10 @@
       - cisco_base_extra_hardening_lines is sequence and cisco_base_extra_hardening_lines is not string
     fail_msg: "One or more variables have incorrect data types!"
     quiet: true
-  tags: [cisco_base, hardening, checks]
+  tags: [hardening, hardening:checks, checks]
 
 - name: Configure global services hardening
   cisco.ios.ios_config:
     content: "{{ lookup('ansible.builtin.template', 'hardening_disable_services.j2') }}"
     defaults: true
-  tags: [cisco_base, hardening]
+  tags: [hardening]

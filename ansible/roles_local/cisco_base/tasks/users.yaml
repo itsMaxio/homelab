@@ -5,7 +5,7 @@
       - "user_count: {{ cisco_base_local_users | length }}"
       - "local_users: {{ cisco_base_local_users }}"
       - "update_password: {{ cisco_base_user_update_password }}"
-  tags: [never, debug]
+  tags: [never, users:debug, debug]
 
 - name: "CHECKS: Assert variable types"
   ansible.builtin.assert:
@@ -14,7 +14,7 @@
       - cisco_base_user_update_password is boolean
     fail_msg: "One or more variables have incorrect data types!"
     quiet: true
-  tags: [cisco_base, users, checks]
+  tags: [users, users:checks, checks]
 
 - name: "CHECKS: Assert local users exist"
   ansible.builtin.assert:
@@ -22,7 +22,7 @@
       - cisco_base_local_users | length > 0
     fail_msg: "cisco_base_local_users must contain at least one user to prevent lockout!"
     quiet: true
-  tags: [cisco_base, users, checks]
+  tags: [users, users:checks, checks]
 
 - name: Manage local users
   cisco.ios.ios_user:
@@ -36,7 +36,7 @@
   loop: "{{ cisco_base_local_users }}"
   loop_control:
     label: "{{ item.name }}"
-  tags: [cisco_base, users]
+  tags: [users]
 
 - name: Prepare user list for purge
   ansible.builtin.set_fact:
@@ -44,10 +44,10 @@
   loop: "{{ cisco_base_local_users }}"
   loop_control:
     label: "{{ item.name }}"
-  tags: [cisco_base, users]
+  tags: [users]
 
 - name: Purge unmanaged local users
   cisco.ios.ios_user:
     aggregate: "{{ purge_user_list }}"
     purge: true
-  tags: [cisco_base, users]
+  tags: [users]
