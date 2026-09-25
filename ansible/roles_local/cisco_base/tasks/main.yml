@@ -1,24 +1,24 @@
 ---
 - name: System task list include
   ansible.builtin.include_tasks: system.yaml
-  tags: [system, system:checks, system:debug, checks, debug]
+  tags: [system, checks, debug]
 
 - name: MTU task list include
   ansible.builtin.include_tasks: mtu.yaml
-  tags: [mtu, mtu:checks, mtu:debug, checks, debug]
+  tags: [mtu, checks, debug]
 
 - name: Users task list include
   ansible.builtin.include_tasks: users.yaml
-  tags: [users, users:checks, users:debug, checks, debug]
+  tags: [users, checks, debug]
 
 - name: SSH task list include
   ansible.builtin.include_tasks: ssh.yaml
-  tags: [ssh, ssh:checks, ssh:debug, checks, debug]
+  tags: [ssh, checks, debug]
 
 - name: Banners task list include
   ansible.builtin.include_tasks: banners.yaml
-  tags: [banners, banners:checks, banners:debug, checks, debug]
+  tags: [banners, checks, debug]
 
 - name: Hardening task list include
   ansible.builtin.include_tasks: hardening.yaml
-  tags: [hardening, hardening:checks, hardening:debug, checks, debug]
+  tags: [hardening, checks, debug]

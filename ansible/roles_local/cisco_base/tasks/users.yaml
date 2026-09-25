@@ -5,7 +5,7 @@
       - "user_count: {{ cisco_base_local_users | length }}"
       - "local_users: {{ cisco_base_local_users }}"
       - "update_password: {{ cisco_base_user_update_password }}"
-  tags: [never, users:debug, debug]
+  tags: [never, debug]
 
 - name: "CHECKS: Assert variable types"
   ansible.builtin.assert:
@@ -14,7 +14,7 @@
       - cisco_base_user_update_password is boolean
     fail_msg: "One or more variables have incorrect data types!"
     quiet: true
-  tags: [users, users:checks, checks]
+  tags: [users, checks]
 
 - name: "CHECKS: Assert local users exist"
   ansible.builtin.assert:
@@ -22,7 +22,7 @@
       - cisco_base_local_users | length > 0
     fail_msg: "cisco_base_local_users must contain at least one user to prevent lockout!"
     quiet: true
-  tags: [users, users:checks, checks]
+  tags: [users, checks]
 
 - name: Manage local users
   cisco.ios.ios_user:

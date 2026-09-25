@@ -6,7 +6,7 @@
       - "domain_name: {{ cisco_base_domain_name | default(None) }}"
       - "name_servers: {{ cisco_base_name_servers }}"
       - "dns_lookup_enabled: {{ cisco_base_dns_lookup_enabled }}"
-  tags: [never, system:debug, debug]
+  tags: [never, debug]
 
 - name: "CHECKS: Assert system variable types"
   ansible.builtin.assert:
@@ -17,7 +17,7 @@
       - cisco_base_dns_lookup_enabled is boolean
     fail_msg: "One or more variables have incorrect data types!"
     quiet: true
-  tags: [system, system:checks, checks]
+  tags: [system, checks]
 
 - name: "CHECKS: Assert system values"
   ansible.builtin.assert:
@@ -27,7 +27,7 @@
       - cisco_base_domain_name | length > 0
     fail_msg: "cisco_base_hostname and cisco_base_domain_name must be defined and not empty."
     quiet: true
-  tags: [system, system:checks, checks]
+  tags: [system, checks]
 
 - name: Configure system settings
   cisco.ios.ios_system:

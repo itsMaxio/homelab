@@ -14,7 +14,7 @@
       - "login_attempts: {{ cisco_base_login_attempts }}"
       - "login_within: {{ cisco_base_login_within }}"
       - "login_quiet_acl: {{ cisco_base_login_quiet_acl | default(None) }}"
-  tags: [never, ssh:debug, debug]
+  tags: [never, debug]
 
 - name: "CHECKS: Assert variable types"
   ansible.builtin.assert:
@@ -33,7 +33,7 @@
       - cisco_base_login_quiet_acl is none or cisco_base_login_quiet_acl is string
     fail_msg: "One or more variables have incorrect data types!"
     quiet: true
-  tags: [ssh, ssh:checks, checks]
+  tags: [ssh, checks]
 
 - name: "CHECKS: Assert SSH values"
   ansible.builtin.assert:
@@ -46,7 +46,7 @@
       - cisco_base_login_within | int > 0
     fail_msg: "Invalid SSH parameters detected!"
     quiet: true
-  tags: [ssh, ssh:checks, checks]
+  tags: [ssh, checks]
 
 - name: "CHECKS: Assert SSH public key requirements"
   ansible.builtin.assert:
@@ -55,7 +55,7 @@
     fail_msg: "cisco_base_ssh_authentication_public_key_only is true, but no user has an SSH key defined!"
     quiet: true
   when: cisco_base_ssh_authentication_public_key_only | bool
-  tags: [ssh, ssh:checks, checks]
+  tags: [ssh, checks]
 
 - name: Set SSH version and timers
   cisco.ios.ios_config:

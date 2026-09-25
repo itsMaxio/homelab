@@ -10,7 +10,7 @@
       - cisco_interfaces_l2 is sequence and cisco_interfaces_l2 is not string
     fail_msg: "One or more variables have incorrect data types!"
     quiet: true
-  tags: [l2:checks, checks]
+  tags: [l2, checks]
 
 - name: Configure L2 interface settings
   cisco.ios.ios_l2_interfaces:
