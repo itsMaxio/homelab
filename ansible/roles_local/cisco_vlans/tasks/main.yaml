@@ -10,7 +10,7 @@
       - cisco_vlans_state is string
     fail_msg: "One or more variables have incorrect data types!"
     quiet: true
-  tags: [cisco_vlans, vlans, checks]
+  tags: [vlans, checks]
 
 - name: "CHECKS: Assert state value"
   ansible.builtin.assert:
@@ -18,7 +18,7 @@
       - cisco_vlans_state in ["merged", "replaced", "overridden", "deleted", "gathered", "purged"]
     fail_msg: "cisco_vlans_state must be one of: [merged, replaced, overridden, deleted, gathered, purged]"
     quiet: true
-  tags: [cisco_vlans, vlans, checks]
+  tags: [vlans, checks]
 
 - name: "CHECKS: Assert VLANS values"
   ansible.builtin.assert:
@@ -31,7 +31,7 @@
   loop: "{{ cisco_vlans_vlans }}"
   loop_control:
     label: "VID {{ item.vlan_id | default('?') }}"
-  tags: [cisco_vlans, vlans, checks]
+  tags: [vlans, checks]
 
 - name: Prepare a final list of VLANs
   ansible.builtin.set_fact:
@@ -41,7 +41,7 @@
         if cisco_vlans_state == "overridden"
         else cisco_vlans_vlans
       }}
-  tags: [cisco_vlans, vlans, debug]
+  tags: [vlans, debug]
 
 - name: "DEBUG : VLAN variables"
   ansible.builtin.debug:
@@ -57,4 +57,4 @@
   cisco.ios.ios_vlans:
     config: "{{ _cisco_vlans_final }}"
     state: "{{ cisco_vlans_state }}"
-  tags: [cisco_vlans, vlans]
+  tags: [vlans]
