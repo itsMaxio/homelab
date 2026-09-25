@@ -1,4 +1,17 @@
 ---
+- name: "DEBUG : Interfaces L1 raw variables"
+  ansible.builtin.debug:
+    var: cisco_interfaces_l1
+  tags: [never, debug]
+
+- name: "CHECKS: Assert L1 variable types"
+  ansible.builtin.assert:
+    that:
+      - cisco_interfaces_l1 is sequence and cisco_interfaces_l1 is not string
+    fail_msg: "One or more variables have incorrect data types!"
+    quiet: true
+  tags: [l1, checks]
+
 - name: Prepare a final list of L1 interfaces
   ansible.builtin.set_fact:
     _cisco_interfaces_l1_final: >-
@@ -7,7 +20,7 @@
         if cisco_interfaces_state == 'overridden'
         else cisco_interfaces_l1
       }}
-  tags: [cisco_interfaces, l1, debug]
+  tags: [l1, debug]
 
 - name: "DEBUG : Interfaces L1 final variables"
   ansible.builtin.debug:
@@ -18,4 +31,4 @@
   cisco.ios.ios_interfaces:
     config: "{{ _cisco_interfaces_l1_final }}"
     state: "{{ cisco_interfaces_state }}"
-  tags: [cisco_interfaces, l1]
+  tags: [l1]
