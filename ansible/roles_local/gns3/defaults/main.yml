@@ -1,0 +1,11 @@
+---
+gns3_with_openvpn: false
+gns3_with_iou: true
+gns3_with_i386: true
+gns3_with_welcome_script: true
+gns3_with_kvm: true
+gns3_with_system_upgrade: true
+gns3_use_unstable_repository: false
+gns3_custom_repository: ""
+
+gns3_iourc_path: "/opt/gns3/.iourc"

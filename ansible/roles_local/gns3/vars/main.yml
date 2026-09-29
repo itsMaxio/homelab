@@ -1,0 +1,4 @@
+---
+gns3_installation_script_url: "https://raw.githubusercontent.com/GNS3/gns3-server/master/scripts/remote-install.sh"
+gns3_supported_distributions:
+  - "Ubuntu"

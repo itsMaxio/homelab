@@ -1,0 +1,6 @@
+---
+- name: Restore origianl hostname
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+  become: true
+  tags: [hostname]

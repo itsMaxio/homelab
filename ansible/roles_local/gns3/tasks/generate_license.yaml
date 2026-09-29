@@ -1,0 +1,18 @@
+- name: Generate and configure local license file
+  become: true
+  tags: [license]
+  when: gns3_with_iou
+  block:
+    - name: Generate token
+      ansible.builtin.script:
+        cmd: "license_helper.py"
+      register: generated_license
+      changed_when: false
+
+    - name: Write token to file
+      ansible.builtin.copy:
+        dest: "{{ gns3_iourc_path }}"
+        content: "{{ generated_license.stdout }}"
+        owner: gns3
+        group: gns3
+        mode: "0644"

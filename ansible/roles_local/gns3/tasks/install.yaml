@@ -1,0 +1,62 @@
+- name: "DEBUG : GNS3 install variables"
+  ansible.builtin.debug:
+    msg:
+      - "gns3_with_openvpn: {{ gns3_with_openvpn }}"
+      - "gns3_with_iou: {{ gns3_with_iou }}"
+      - "gns3_with_i386: {{ gns3_with_i386 }}"
+      - "gns3_with_welcome_script: {{ gns3_with_welcome_script }}"
+      - "gns3_with_kvm: {{ gns3_with_kvm }}"
+      - "gns3_with_system_upgrade: {{ gns3_with_system_upgrade }}"
+      - "gns3_use_unstable_repository: {{ gns3_use_unstable_repository }}"
+      - "gns3_custom_repository: {{ gns3_custom_repository }}"
+  tags: [never, debug]
+
+- name: "CHECKS : Assert GNS3 install variable types"
+  ansible.builtin.assert:
+    that:
+      - gns3_with_openvpn is boolean
+      - gns3_with_iou is boolean
+      - gns3_with_i386 is boolean
+      - gns3_with_welcome_script is boolean
+      - gns3_with_kvm is boolean
+      - gns3_with_system_upgrade is boolean
+      - gns3_use_unstable_repository is boolean
+      - gns3_custom_repository is string
+    fail_msg: "One or more variables have incorrect data types!"
+    quiet: true
+  tags: [checks]
+
+- name: "CHECKS : Assert host distribution is supported"
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['distribution'] in gns3_supported_distributions
+    fail_msg: "Host distribution {{ ansible_facts['distribution'] }} is not supported!"
+    quiet: true
+  tags: [checks]
+
+- name: Download and install GNS3
+  become: true
+  tags: [install]
+  block:
+    - name: Download GNS3 remote installation script
+      ansible.builtin.get_url:
+        url: "{{ gns3_installation_script_url }}"
+        dest: "/tmp/gns3-remote-install.sh"
+        mode: "0700"
+
+    - name: Execute GNS3 remote install script
+      ansible.builtin.command:
+        argv:
+          - /bin/bash
+          - /tmp/gns3-remote-install.sh
+          - "{{ '--with-openvpn' if gns3_with_openvpn else omit }}"
+          - "{{ '--with-iou' if gns3_with_iou else omit }}"
+          - "{{ '--with-i386-repository' if gns3_with_i386 else omit }}"
+          - "{{ '--with-welcome' if gns3_with_welcome_script else omit }}"
+          - "{{ '--without-kvm' if not gns3_with_kvm else omit }}"
+          - "{{ '--without-system-upgrade' if not gns3_with_system_upgrade else omit }}"
+          - "{{ '--unstable' if gns3_use_unstable_repository else omit }}"
+          - "{{ '--custom-repository' if gns3_custom_repository | length > 0 else omit }}"
+          - "{{ gns3_custom_repository if gns3_custom_repository | length > 0 else omit }}"
+        creates: /usr/bin/gns3server
+      poll: 5

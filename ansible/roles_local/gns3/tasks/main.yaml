@@ -1,0 +1,12 @@
+---
+- name: Install task list include
+  ansible.builtin.include_tasks: install.yaml
+  tags: [install, checks, debug]
+
+- name: Hostname task list include
+  ansible.builtin.include_tasks: restore_hostname.yaml
+  tags: [hostname, checks, debug]
+
+- name: License task list include
+  ansible.builtin.include_tasks: generate_license.yaml
+  tags: [license, checks, debug]
