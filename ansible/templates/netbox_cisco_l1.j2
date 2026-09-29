@@ -7,7 +7,4 @@
 {% if interface.mtu is defined and interface.mtu is not none %}
   mtu: {{ interface.mtu }}
 {% endif %}
-{% if interface.duplex is defined and interface.duplex is not none %}
-  duplex: "{{ interface.duplex.value if interface.duplex is mapping else interface.duplex }}"
-{% endif %}
 {% endfor %}
