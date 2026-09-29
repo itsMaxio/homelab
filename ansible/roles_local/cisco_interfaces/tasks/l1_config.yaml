@@ -44,7 +44,7 @@
       ansible.builtin.debug:
         msg:
           - "interfaces_to_purge: {{ _cisco_interfaces_l1_to_purge }}"
-      tags: [debug]
+      tags: [never, debug]
 
     - name: Purge unused interfaces
       cisco.ios.ios_interfaces:
