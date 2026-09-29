@@ -34,23 +34,23 @@
 
     - name: Derive VLAN list from NetBox interface data
       ansible.builtin.set_fact:
-        netbox_vlans: "{{ lookup('ansible.builtin.template', '../templates/netbox_vlans.j2') | from_yaml | default([], true) }}"
-      tags: [never, cisco_vlans, vlans, debug]
+        netbox_vlans: "{{ interfaces | netbox_to_vlans }}"
+      tags: [always]
 
     - name: Derive L1 interface config from NetBox
       ansible.builtin.set_fact:
-        netbox_cisco_l1: "{{ lookup('ansible.builtin.template', '../templates/netbox_cisco_l1.j2') | from_yaml | default([], true) }}"
-      tags: [never, cisco_interfaces, l1, debug]
+        netbox_cisco_l1: "{{ interfaces | netbox_to_l1 }}"
+      tags: [always]
 
     - name: Derive L2 interface config from NetBox
       ansible.builtin.set_fact:
-        netbox_cisco_l2: "{{ lookup('ansible.builtin.template', '../templates/netbox_cisco_l2.yaml.j2') | from_yaml | default([], true) }}"
-      tags: [never, cisco_interfaces, l2, debug]
+        netbox_cisco_l2: "{{ interfaces | netbox_to_l2 }}"
+      tags: [always]
 
     - name: Derive L3 interface config from NetBox
       ansible.builtin.set_fact:
-        netbox_cisco_l3: "{{ lookup('ansible.builtin.template', '../templates/netbox_cisco_l3.yaml.j2') | from_yaml | default([], true) }}"
-      tags: [never, cisco_interfaces, l3, debug]
+        netbox_cisco_l3: "{{ interfaces | netbox_to_l3 }}"
+      tags: [always]
 
   roles:
     - role: cisco_backup
