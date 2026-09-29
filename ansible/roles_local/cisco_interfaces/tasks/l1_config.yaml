@@ -12,6 +12,46 @@
     quiet: true
   tags: [l1, checks]
 
+- name: Gather and purge unused interfaces
+  when: cisco_interfaces_state == "overridden"
+  tags: [l1]
+  block:
+    - name: Gather all existing interfaces
+      cisco.ios.ios_interfaces:
+        state: gathered
+      register: _cisco_interfaces_l1_gathered
+      tags: [debug]
+
+    - name: Select L1 interfaces to remove
+      vars:
+        _cisco_interfaces_l1_reserved_names: "{{ cisco_interfaces_l1_reserved | default([]) | map(attribute='name') | list }}"
+        _cisco_interfaces_l1_names: "{{ cisco_interfaces_l1 | default([]) | map(attribute='name') | list }}"
+      ansible.builtin.set_fact:
+        _cisco_interfaces_l1_to_purge: >-
+          {%- set interface_names = _cisco_interfaces_l1_gathered.gathered | default([])
+          | map(attribute="name")
+          | select("match", "(?i)vlan|loopback")
+          | difference(_cisco_interfaces_l1_reserved_names)
+          | difference(_cisco_interfaces_l1_names) -%}
+          {%- set result = [] -%}
+          {%- for interface_name in interface_names -%}
+            {%- set _ = result.append({"name": interface_name}) -%}
+          {%- endfor -%}
+          {{ result }}
+      tags: [debug]
+
+    - name: "DEBUG : Interfaces L1 to delete"
+      ansible.builtin.debug:
+        msg:
+          - "interfaces_to_purge: {{ _cisco_interfaces_l1_to_purge }}"
+      tags: [debug]
+
+    - name: Purge unused interfaces
+      cisco.ios.ios_interfaces:
+        config: "{{ _cisco_interfaces_l1_to_purge }}"
+        state: purged
+      when: _cisco_interfaces_l1_to_purge | length > 0
+
 - name: Prepare a final list of L1 interfaces
   ansible.builtin.set_fact:
     _cisco_interfaces_l1_final: >-

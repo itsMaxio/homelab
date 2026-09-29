@@ -15,6 +15,11 @@
     quiet: true
   tags: [l1, l2, l3, checks]
 
+- name: "DEBUG : Interfaces state"
+  ansible.builtin.debug:
+    var: cisco_interfaces_state
+  tags: [never, debug]
+
 - name: Manage L1 settings
   ansible.builtin.include_tasks: l1_config.yaml
   tags: [l1, checks, debug]
