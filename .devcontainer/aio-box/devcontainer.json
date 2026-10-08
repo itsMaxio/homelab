@@ -40,7 +40,8 @@
         "redhat.vscode-yaml",
         "yzhang.markdown-all-in-one",
         "samuelcolvin.jinjahtml",
-        "vivaxy.vscode-conventional-commits"
+        "vivaxy.vscode-conventional-commits",
+        "DavidAnson.vscode-markdownlint"
       ]
     }
   },
