@@ -36,15 +36,6 @@ Examples:
 
 - `fw-01`
 
-### Hypervisors
-
-Proxmox hosts start with `pve`
-
-Examples:
-
-- `pve-01`
-- `pve-02`
-
 ### Access Points
 
 Access points start with `ap`
@@ -53,6 +44,24 @@ Examples:
 
 - `ap-01`
 - `ap-02`
+
+### NAS Devices
+
+NAS devices start with `nas`
+
+Examples:
+
+- `nas-01`
+- `nas-02`
+
+### Hypervisors
+
+Proxmox hosts start with `pve`
+
+Examples:
+
+- `pve-01`
+- `pve-02`
 
 ### Virtual Machines and Containers
 
