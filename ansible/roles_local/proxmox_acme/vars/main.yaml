@@ -1,0 +1,5 @@
+_proxmox_acme_account_directories:
+  staging:
+    directory: "https://acme-staging-v02.api.letsencrypt.org/directory"
+  production:
+    directory: "https://acme-v02.api.letsencrypt.org/directory"

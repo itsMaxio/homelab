@@ -1,0 +1,64 @@
+---
+- name: "DEBUG : ACME account variables"
+  ansible.builtin.debug:
+    msg:
+      - "account_name: {{ proxmox_acme_account_name }}"
+      - "contact_email: {{ proxmox_acme_account_contact_email }}"
+      - "account_type: {{ proxmox_acme_account_type }}"
+  tags: [never, debug]
+
+- name: "CHECKS : Assert ACME account variable types"
+  ansible.builtin.assert:
+    that:
+      - proxmox_acme_account_name is string
+      - proxmox_acme_account_contact_email is string
+      - proxmox_acme_account_type is string
+    fail_msg: "One or more ACME account variables have incorrect data types!"
+    quiet: true
+  tags: [account, checks]
+
+- name: "CHECKS : Assert ACME account values"
+  ansible.builtin.assert:
+    that:
+      - proxmox_acme_account_name | length > 0
+      - proxmox_acme_account_contact_email | length > 0
+      - proxmox_acme_account_type | length > 0
+      - proxmox_acme_account_type in _proxmox_acme_account_directories
+    fail_msg: "proxmox_acme_account_name, contact email, and directory must not be empty!"
+    quiet: true
+  tags: [account, checks]
+
+- name: Fetch existing ACME accounts
+  community.proxmox.proxmox_acme_accounts_info:
+  register: _proxmox_existing_acme_accounts
+  delegate_to: localhost
+  tags: [account, checks]
+
+- name: Manage ACME
+  when: proxmox_acme_account_name not in (_proxmox_existing_acme_accounts.accounts | list)
+  tags: [account]
+  block:
+    - name: Set ACME directory
+      ansible.builtin.set_fact:
+        _proxmox_acme_account_directory: "{{ _proxmox_acme_account_directories[proxmox_acme_account_type].directory }}"
+
+    - name: Fetch ACME metadata
+      ansible.builtin.uri:
+        url: "{{ _proxmox_acme_account_directory }}"
+        return_content: true
+      register: _acme_directory_metadata
+      delegate_to: localhost
+      run_once: true
+
+    - name: Set ACME TOS URL
+      ansible.builtin.set_fact:
+        _proxmox_acme_tos_url: "{{ _acme_directory_metadata.json.meta.termsOfService }}"
+      run_once: true
+
+    - name: Create ACME account
+      community.proxmox.proxmox_acme_account:
+        name: "{{ proxmox_acme_account_name }}"
+        contact: "{{ proxmox_acme_account_contact_email }}"
+        directory: "{{ _proxmox_acme_account_directory }}"
+        tos: "{{ _proxmox_acme_tos_url }}"
+      delegate_to: localhost

@@ -1,0 +1,31 @@
+---
+- name: Include proxmox_base role
+  ansible.builtin.include_role:
+    name: proxmox_base
+  when: not (_proxmox_api_working | default(false) | bool)
+  tags: [always]
+
+- name: Manage Proxmox ACME configuration
+  module_defaults:
+    group/community.proxmox.proxmox:
+      api_host: "{{ proxmox_api_host }}"
+      api_port: "{{ proxmox_api_port }}"
+      api_user: "{{ proxmox_api_user }}"
+      api_password: "{{ proxmox_api_password if (proxmox_api_password | default('') | length > 0) else omit }}"
+      api_token_id: "{{ proxmox_api_token_id if (proxmox_api_token_id | default('') | length > 0) else omit }}"
+      api_token_secret: "{{ proxmox_api_token_secret if (proxmox_api_token_secret | default('') | length > 0) else omit }}"
+      validate_certs: "{{ proxmox_api_validate_certs }}"
+  block:
+    - name: Manage ACME account
+      ansible.builtin.include_tasks: account.yaml
+      when: (_proxmox_is_primary_node | default(true) | bool) or ('debug' in ansible_run_tags)
+      tags: [account, checks, debug]
+
+    - name: Manage ACME DNS plugin
+      ansible.builtin.include_tasks: plugin.yaml
+      when: (_proxmox_is_primary_node | default(true) | bool) or ('debug' in ansible_run_tags)
+      tags: [plugin, checks, debug]
+
+    - name: Manage ACME certificate
+      ansible.builtin.include_tasks: certificate.yaml
+      tags: [certificate, checks, debug]
