@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -eu
 
 mkdir -p /root/.ssh
@@ -11,5 +11,8 @@ fi
 find /root/.ssh -type f -exec chmod 600 {} \;
 find /root/.ssh -type d -exec chmod 700 {} \;
 
+# ansible
+bash /workspace/ansible/install_requirements.sh
+
 # terraform
-terraform -install-autocomplete;
+terraform -install-autocomplete 2>/dev/null || true
