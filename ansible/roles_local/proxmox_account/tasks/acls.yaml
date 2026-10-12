@@ -1,0 +1,38 @@
+---
+- name: "DEBUG : Proxmox ACL variables"
+  ansible.builtin.debug:
+    msg:
+      - "account_acls: {{ proxmox_account_acls }}"
+  tags: [never, debug]
+
+- name: "CHECKS : Assert Proxmox ACL variable types"
+  ansible.builtin.assert:
+    that:
+      - proxmox_account_acls is list
+    fail_msg: "proxmox_account_acls must be a list!"
+    quiet: true
+  tags: [acls, checks]
+
+- name: "CHECKS : Assert Proxmox ACL values"
+  ansible.builtin.assert:
+    that:
+      - proxmox_account_acls | selectattr('path', 'undefined') | list | length == 0
+      - proxmox_account_acls | selectattr('role_name', 'undefined') | list | length == 0
+      - proxmox_account_acls | selectattr('username', 'undefined') | list | length == 0
+      - proxmox_account_acls | selectattr('realm', 'undefined') | list | length == 0
+      - proxmox_account_acls | rejectattr('realm', 'in', _proxmox_realms) | list | length == 0
+    fail_msg: "All ACL entries must have defined 'path', 'role_name', 'username', and a valid 'realm' (must be one of {{ _proxmox_realms }})!"
+    quiet: true
+  tags: [acls, checks]
+
+- name: Manage Proxmox ACLs
+  community.proxmox.proxmox_access_acl:
+    path: "{{ item.path }}"
+    roleid: "{{ item.role_name }}"
+    type: "user"
+    ugid: "{{ item.username }}@{{ item.realm }}"
+    propagate: "{{ item.propagate | default(true) }}"
+    state: "{{ item.state | default('present') }}"
+  loop: "{{ proxmox_account_acls }}"
+  delegate_to: localhost
+  tags: [acls]

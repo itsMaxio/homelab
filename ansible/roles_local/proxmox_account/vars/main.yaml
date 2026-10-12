@@ -1,0 +1,4 @@
+---
+_proxmox_realms:
+  - "pam"
+  - "pve"

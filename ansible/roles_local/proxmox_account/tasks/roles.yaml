@@ -1,0 +1,32 @@
+---
+- name: "DEBUG : Proxmox role variables"
+  ansible.builtin.debug:
+    msg:
+      - "account_roles: {{ proxmox_account_roles }}"
+  tags: [never, debug]
+
+- name: "CHECKS : Assert Proxmox role variable types"
+  ansible.builtin.assert:
+    that:
+      - proxmox_account_roles is list
+    fail_msg: "proxmox_account_roles must be a list"
+    quiet: true
+  tags: [roles, checks]
+
+- name: "CHECKS : Assert Proxmox role values"
+  ansible.builtin.assert:
+    that:
+      - proxmox_account_roles | selectattr('name', 'undefined') | list | length == 0
+      - proxmox_account_roles | selectattr('privileges', 'undefined') | list | length == 0
+    fail_msg: "All roles must have a defined 'name' and 'privileges'"
+    quiet: true
+  tags: [roles, checks]
+
+- name: Manage Proxmox API roles
+  community.proxmox.proxmox_role:
+    roleid: "{{ item.name }}"
+    privs: "{{ item.privileges }}"
+    state: "{{ item.state | default('present') }}"
+  loop: "{{ proxmox_account_roles }}"
+  delegate_to: localhost
+  tags: [roles]

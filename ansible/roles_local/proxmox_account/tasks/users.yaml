@@ -1,0 +1,47 @@
+---
+- name: "DEBUG : Proxmox user variables"
+  ansible.builtin.debug:
+    msg:
+      - "account_users: {{ proxmox_account_users }}"
+  tags: [never, debug]
+
+- name: "CHECKS : Assert Proxmox user variable types"
+  ansible.builtin.assert:
+    that:
+      - proxmox_account_users is list
+    fail_msg: "proxmox_account_users must be a list"
+    quiet: true
+  tags: [users, tokens, checks]
+
+- name: "CHECKS : Assert Proxmox user values"
+  ansible.builtin.assert:
+    that:
+      - proxmox_account_users | selectattr('username', 'undefined') | list | length == 0
+      - proxmox_account_users | selectattr('realm', 'undefined') | list | length == 0
+      - proxmox_account_users | rejectattr('realm', 'in', _proxmox_realms) | list | length == 0
+    fail_msg: "All users must have defined 'username' and 'realm' (must be one of {{ _proxmox_realms }})"
+    quiet: true
+  tags: [users, tokens, checks]
+
+- name: Manage Proxmox users and API tokens
+  community.proxmox.proxmox_user:
+    name: "{{ item.username }}@{{ item.realm }}"
+    email: "{{ item.email | default(omit) }}"
+    comment: "{{ item.comment | default(omit) }}"
+    enable: "{{ item.enabled | default(true) }}"
+    state: "{{ item.state | default('present') }}"
+    tokens: "{{ _proxmox_user_tokens }}"
+  loop: "{{ proxmox_account_users }}"
+  vars:
+    _proxmox_user_tokens: >-
+      [
+        {% for token in (item.tokens | default([])) %}
+        {
+          "tokenid": "{{ token.name }}",
+          "comment": "{{ token.comment | default('') }}",
+          "privsep": {{ token.privilege_separation | default(false) | bool | lower }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+      ]
+  delegate_to: localhost
+  tags: [users, tokens]
