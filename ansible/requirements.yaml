@@ -1,2 +1,4 @@
+---
 collections:
   - name: netbox.netbox
+  - name: community.proxmox
