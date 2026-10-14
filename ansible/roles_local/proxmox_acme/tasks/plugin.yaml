@@ -2,35 +2,16 @@
 - name: "DEBUG : ACME DNS plugin variables"
   ansible.builtin.debug:
     msg:
-      - "plugin_name: {{ proxmox_acme_dns_plugin_name }}"
-      - "plugin_type: {{ proxmox_acme_dns_plugin_type }}"
-      - "plugin_data: {{ proxmox_acme_dns_plugin_data }}"
+      - "plugin_name: {{ proxmox_acme_dns_plugin.name }}"
+      - "plugin_type: {{ proxmox_acme_dns_plugin.type }}"
+      - "plugin_data: {{ 'set' if proxmox_acme_dns_plugin.data | length > 0 else 'not set' }}"
   tags: [never, debug]
-
-- name: "CHECKS : Assert ACME DNS plugin variable types"
-  ansible.builtin.assert:
-    that:
-      - proxmox_acme_dns_plugin_name is string
-      - proxmox_acme_dns_plugin_type is string
-      - proxmox_acme_dns_plugin_data is string or proxmox_acme_dns_plugin_data is mapping
-    fail_msg: "One or more ACME DNS plugin variables have incorrect data types!"
-    quiet: true
-  tags: [plugin, checks]
-
-- name: "CHECKS : Assert ACME DNS plugin values"
-  ansible.builtin.assert:
-    that:
-      - proxmox_acme_dns_plugin_name | length > 0
-      - proxmox_acme_dns_plugin_type | length > 0
-      - proxmox_acme_dns_plugin_data | length > 0
-    fail_msg: "proxmox_acme_dns_plugin_name, plugin type, and data must not be empty!"
-    quiet: true
-  tags: [plugin, checks]
 
 - name: Configure ACME DNS plugin
   community.proxmox.proxmox_acme_plugin_dns:
-    name: "{{ proxmox_acme_dns_plugin_name }}"
-    plugin: "{{ proxmox_acme_dns_plugin_type }}"
-    data: "{{ proxmox_acme_dns_plugin_data }}"
+    name: "{{ proxmox_acme_dns_plugin.name }}"
+    plugin: "{{ proxmox_acme_dns_plugin.type }}"
+    data: "{{ proxmox_acme_dns_plugin.data }}"
   delegate_to: localhost
+  no_log: true
   tags: [plugin]

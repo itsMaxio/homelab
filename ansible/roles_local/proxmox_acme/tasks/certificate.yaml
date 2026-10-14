@@ -2,39 +2,20 @@
 - name: "DEBUG : ACME certificate variables"
   ansible.builtin.debug:
     msg:
-      - "node_name: {{ proxmox_acme_node_name }}"
-      - "domain: {{ proxmox_acme_domain }}"
-      - "plugin_name: {{ proxmox_acme_dns_plugin_name }}"
-      - "account_name: {{ proxmox_acme_account_name }}"
-      - "force_renew: {{ proxmox_acme_force_certificate_renew }}"
+      - "target_node_name: {{ proxmox_acme_certificate.target_node_name }}"
+      - "account_name: {{ proxmox_acme_certificate.account_name }}"
+      - "domain: {{ proxmox_acme_certificate.domain }}"
+      - "plugin_name: {{ proxmox_acme_certificate.plugin_name }}"
+      - "force_renew: {{ proxmox_acme_certificate.force_certificate_renew }}"
   tags: [never, debug]
-
-- name: "CHECKS : Assert ACME certificate variable types"
-  ansible.builtin.assert:
-    that:
-      - proxmox_acme_node_name is string
-      - proxmox_acme_domain is string
-      - proxmox_acme_force_certificate_renew is boolean
-    fail_msg: "One or more ACME certificate variables have incorrect data types!"
-    quiet: true
-  tags: [certificate, checks]
-
-- name: "CHECKS : Assert ACME certificate values"
-  ansible.builtin.assert:
-    that:
-      - proxmox_acme_node_name | length > 0
-      - proxmox_acme_domain | length > 0
-    fail_msg: "proxmox_acme_node_name and proxmox_acme_domain must be defined and not empty!"
-    quiet: true
-  tags: [certificate, checks]
 
 - name: Order ACME certificate
   community.proxmox.proxmox_acme_certificate:
-    node_name: "{{ proxmox_acme_node_name }}"
-    account: "{{ proxmox_acme_account_name }}"
+    node_name: "{{ proxmox_acme_certificate.target_node_name | default(inventory_hostname) }}"
+    account: "{{ proxmox_acme_certificate.account_name }}"
     domains:
-      - domain: "{{ proxmox_acme_domain }}"
-        plugin: "{{ proxmox_acme_dns_plugin_name }}"
-    force: "{{ proxmox_acme_force_certificate_renew }}"
+      - domain: "{{ proxmox_acme_certificate.domain }}"
+        plugin: "{{ proxmox_acme_certificate.plugin_name }}"
+    force: "{{ proxmox_acme_certificate.force_certificate_renew | default(false) }}"
   delegate_to: localhost
   tags: [certificate]

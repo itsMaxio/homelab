@@ -5,39 +5,11 @@
       - "api_host: {{ proxmox_api_host }}"
       - "api_port: {{ proxmox_api_port }}"
       - "api_user: {{ proxmox_api_user }}"
-      - "api_password: {{ proxmox_api_password }}"
+      - "api_password: {{ 'set' if proxmox_api_password | default('not set') }}"
       - "api_token_id: {{ proxmox_api_token_id }}"
-      - "api_token_secret: {{ proxmox_api_token_secret }}"
+      - "api_token_secret: {{ 'set' if proxmox_api_token_secret | default('not set') }}"
       - "validate_certs: {{ proxmox_api_validate_certs }}"
   tags: [never, debug]
-
-- name: "CHECKS : Assert Proxmox API variable types"
-  ansible.builtin.assert:
-    that:
-      - proxmox_api_host is string
-      - proxmox_api_port is number
-      - proxmox_api_user is string
-      - proxmox_api_password is string
-      - proxmox_api_token_id is string
-      - proxmox_api_token_secret is string
-      - proxmox_api_validate_certs is boolean
-    fail_msg: "One or more Proxmox API variables have incorrect data types!"
-    quiet: true
-  tags: [checks]
-
-- name: "CHECKS : Assert Proxmox API values"
-  ansible.builtin.assert:
-    that:
-      - proxmox_api_host | length > 0
-      - proxmox_api_port > 0 and proxmox_api_port <= 65535
-      - proxmox_api_user | length > 0
-      - >
-        (proxmox_api_token_id | length > 0 and proxmox_api_token_secret | length > 0)
-        or
-        (proxmox_api_password | length > 0)
-    fail_msg: "Proxmox API host, port, user, token ID, and token secret must not be empty!"
-    quiet: true
-  tags: [checks]
 
 - name: Proxmox API test and node role detection
   when: "'debug' not in ansible_run_tags"
@@ -48,9 +20,9 @@
         api_host: "{{ proxmox_api_host }}"
         api_port: "{{ proxmox_api_port }}"
         api_user: "{{ proxmox_api_user }}"
-        api_password: "{{ proxmox_api_password if (proxmox_api_password | length > 0) else omit }}"
-        api_token_id: "{{ proxmox_api_token_id if (proxmox_api_token_id | length > 0) else omit }}"
-        api_token_secret: "{{ proxmox_api_token_secret if (proxmox_api_token_secret | length > 0) else omit }}"
+        api_password: "{{ proxmox_api_password | default(omit, true) }}"
+        api_token_id: "{{ proxmox_api_token_id | default(omit, true) }}"
+        api_token_secret: "{{ proxmox_api_token_secret | default(omit, true) }}"
         validate_certs: "{{ proxmox_api_validate_certs }}"
       register: _proxmox_cluster_info
       delegate_to: localhost
@@ -70,7 +42,6 @@
             or
             (_local_node.nodeid == _first_online_node.nodeid)
           }}
-        _proxmox_api_working: true
 
 - name: "DEBUG : Cluster role"
   ansible.builtin.debug:

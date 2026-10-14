@@ -1,0 +1,21 @@
+---
+argument_specs:
+  main:
+    options:
+      proxmox_api_host:
+        type: str
+      proxmox_api_port:
+        type: int
+        default: 8006
+      proxmox_api_user:
+        type: str
+        default: root@pam
+      proxmox_api_password:
+        type: str
+      proxmox_api_token_id:
+        type: str
+      proxmox_api_token_secret:
+        type: str
+      proxmox_api_validate_certs:
+        type: bool
+        default: false

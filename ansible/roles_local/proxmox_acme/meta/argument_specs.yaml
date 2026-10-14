@@ -1,0 +1,51 @@
+---
+argument_specs:
+  main:
+    options:
+      proxmox_acme_accounts:
+        type: list
+        elements: dict
+        default: []
+        options:
+          name:
+            type: str
+            required: true
+          contact_email:
+            type: str
+            required: true
+          type:
+            type: str
+            required: true
+            choices: [staging, production]
+      proxmox_acme_dns_plugins:
+        type: list
+        elements: dict
+        default: []
+        options:
+          name:
+            type: str
+            required: true
+          type:
+            type: str
+            required: true
+          data:
+            type: raw
+            required: true
+      proxmox_acme_certificates:
+        type: list
+        elements: dict
+        default: []
+        options:
+          target_node_name:
+            type: str
+          account_name:
+            type: str
+            required: true
+          plugin_name:
+            type: str
+            required: true
+          domain:
+            type: str
+            required: true
+          force_certificate_renew:
+            type: bool

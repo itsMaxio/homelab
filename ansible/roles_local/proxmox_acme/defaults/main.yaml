@@ -1,12 +1,15 @@
 ---
-proxmox_acme_account_name: "default"
-proxmox_acme_account_contact_email: ""
-proxmox_acme_account_type: "staging"
+proxmox_acme_accounts: []
+# proxmox_acme_account_name: "default"
+# proxmox_acme_account_contact_email: ""
+# proxmox_acme_account_type: "staging"
 
-proxmox_acme_dns_plugin_name: "cloudflare"
-proxmox_acme_dns_plugin_type: "cf"
-proxmox_acme_dns_plugin_data: ""
+proxmox_acme_dns_plugins: []
+# proxmox_acme_dns_plugin_name: "cloudflare"
+# proxmox_acme_dns_plugin_type: "cf"
+# proxmox_acme_dns_plugin_data: ""
 
-proxmox_acme_node_name: "{{ inventory_hostname }}"
-proxmox_acme_domain: ""
-proxmox_acme_force_certificate_renew: false
+proxmox_acme_certificates: []
+# proxmox_acme_node_name: "{{ inventory_hostname }}"
+# proxmox_acme_domain: ""
+# proxmox_acme_force_certificate_renew: false
