@@ -22,3 +22,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
+
+**/secrets.yaml
+**/secrets/*.yaml
+**/*.secret.yaml
