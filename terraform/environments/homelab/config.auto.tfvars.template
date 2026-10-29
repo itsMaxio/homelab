@@ -1,0 +1,12 @@
+main_endpoint   = "https://pve1.example.com:8006/"
+main_api_token    = "terraform@pve!terraform=123"
+main_ssh_password = "ssh_password"
+
+backup_endpoint = "https://pve2.example.com:8006/"
+backup_api_token    = "terraform@pve!terraform=123"
+backup_ssh_password = "ssh_password"
+
+netbox_endpoint = "https://netbox.example.com"
+netbox_api_token = "key"
+
+vm_tag = "terraform-managed"
