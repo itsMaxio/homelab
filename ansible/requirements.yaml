@@ -1,4 +1,9 @@
 ---
 collections:
+  - name: community.general
+  - name: community.crypto
   - name: netbox.netbox
   - name: community.proxmox
+
+roles:
+  - name: borgbase.ansible_role_borgbackup
