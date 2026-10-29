@@ -1,0 +1,154 @@
+- name: Configure Borg backups
+  hosts: borg-backup
+  gather_facts: true
+  become: true
+  vars:
+    ansible_user: maxio
+
+    ctx: "{{ config_context[0] }}"
+
+    borg_nas_ssh_alias: "{{ ctx.borg_nas_ssh_alias }}"
+    borg_nas_host: "{{ ctx.borg_nas_host }}"
+    borg_nas_user: "backup-{{ inventory_hostname }}"
+    borg_ssh_key_path: "{{ ctx.borg_ssh_key_path }}"
+    borg_ssh_custom_command: "ssh"
+
+    healthchecks_url: "{{ ctx.healthchecks_url }}"
+    healthchecks_description: "Borg backup of {{ inventory_hostname }}"
+    healthchecks_timezone: "{{ ctx.healthchecks_timezone }}"
+    healthchecks_grace: "{{ ctx.healthchecks_grace }}"
+    borg_cron: "{{ ctx.borg_cron }}"
+
+    borg_nas_backup_base: "{{ ctx.borg_nas_backup_base }}"
+    borg_nas_backup_name: "backup-{{ inventory_hostname }}"
+
+    borgbackup_install: "{{ ctx.borg_install }}"
+
+    borgbackup_ssh:
+      create: true
+      key_path: "{{ borg_ssh_key_path }}"
+      command: "{{ borg_ssh_custom_command }}"
+
+    borgbackup_config:
+      name: config.yaml
+      relocated_repo_access_is_ok: true
+      repositories:
+        - path: "ssh://{{ borg_nas_ssh_alias }}/./repo"
+          label: "{{ borg_nas_ssh_alias }}"
+      source_directories: "{{ ctx.borg_source_directories }}"
+      one_file_system: true
+      exclude_caches: true
+      compression: "{{ ctx.borg_compression }}"
+      lock_wait: 30
+      store_atime: false
+      store_ctime: true
+      encryption_passphrase: "{{ borg_passphrase }}"
+      retention: "{{ ctx.borg_retention }}"
+      checks: "{{ ctx.borg_checks }}"
+      extra:
+        archive_name_format: "{hostname}-{now:%Y-%m-%dT%H:%M:%S.%f}"
+        verbosity: 1
+        syslog_verbosity: 1
+        statistics: standard
+        list_details: true
+        healthchecks:
+          ping_url: "{{ runtime_healthcheck_url }}"
+          send_logs: true
+        commands:
+          - before: action
+            when: [create]
+            run:
+              - systemctl stop docker.socket docker.service
+          - after: action
+            when: [create]
+            run:
+              - systemctl start docker.socket docker.service
+          - after: error
+            run:
+              - systemctl start docker.socket docker.service
+
+    borgbackup_timer:
+      type: cron
+      hour: "{{ borg_cron.hour }}"
+      minute: "{{ borg_cron.minute }}"
+
+  pre_tasks:
+    - name: Get Healthchecks API key once
+      ansible.builtin.set_fact:
+        healthchecks_api_key: "{{ lookup('community.general.onepassword', 'healthchecks', field='api-key', vault='Ansible') }}"
+      delegate_to: localhost
+      become: false
+      run_once: true
+
+    - name: Get Borg passphrase for specific host
+      ansible.builtin.set_fact:
+        borg_passphrase: "{{ lookup('community.general.onepassword', 'borgmatic', field=inventory_hostname, vault='Ansible') }}"
+      delegate_to: localhost
+      become: false
+
+    - name: Install packages needed for SSH config and key creation
+      ansible.builtin.apt:
+        name:
+          - openssh-client
+          - python3-paramiko
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: "Create or update the Healthchecks check for {{ inventory_hostname }}"
+      ansible.builtin.uri:
+        url: "{{ healthchecks_url }}/api/v3/checks/"
+        method: POST
+        return_content: true
+        headers:
+          X-Api-Key: "{{ healthchecks_api_key }}"
+        body_format: json
+        body:
+          name: "{{ inventory_hostname }}"
+          slug: "{{ inventory_hostname }}"
+          tags: "borg {{ inventory_hostname }}"
+          desc: "{{ healthchecks_description }}"
+          schedule: "{{ borg_cron.minute }} {{ borg_cron.hour }} * * *"
+          tz: "{{ healthchecks_timezone }}"
+          grace: "{{ healthchecks_grace }}"
+          channels: "*"
+          unique:
+            - slug
+        status_code:
+          - 200
+          - 201
+      register: healthchecks_api_result
+      delegate_to: localhost
+      become: false
+
+    - name: "Save the Healthchecks ping URL for {{ inventory_hostname }}"
+      ansible.builtin.set_fact:
+        runtime_healthcheck_url: "{{ healthchecks_api_result.json.ping_url }}"
+
+  roles:
+    - role: borgbase.ansible_role_borgbackup
+
+  post_tasks:
+    - name: Write the SSH config entry for the NAS
+      community.general.ssh_config:
+        user: root
+        host: "{{ borg_nas_ssh_alias }}"
+        hostname: "{{ borg_nas_host }}"
+        remote_user: "{{ borg_nas_user }}"
+        identity_file: "{{ borg_ssh_key_path }}"
+        identities_only: true
+        strict_host_key_checking: accept-new
+        state: present
+
+    - name: Read the public SSH key used for backups
+      ansible.builtin.slurp:
+        src: "{{ borg_ssh_key_path }}.pub"
+      register: borg_pubkey
+
+    - name: Show the line for Authorized Keys of the NAS user
+      ansible.builtin.debug:
+        msg: >-
+          restrict,command="TMPDIR={{ borg_nas_backup_base }}/tmp
+          {{ borg_nas_backup_base }}/borg serve
+          --restrict-to-repository {{ borg_nas_backup_base }}/{{ borg_nas_backup_name }}/repo"
+          {{ borg_pubkey.content | b64decode | trim }}
