@@ -16,7 +16,10 @@ group_by:
 query_filters:
   - has_primary_ip: true
   - tag: ansible-managed
+  - status: active
 
 compose:
-  ansible_host: primary_ip4.address.split('/')[0]
-  ansible_user: config_context.ansible_user | default('')
+  ansible_user: config_context.ansible_user | default(omit)
+  ansible_connection: config_context.ansible_connection | default(omit)
+  ansible_become_method: config_context.ansible_become_method | default(omit)
+  ansible_become_flags: config_context.ansible_become_flags | default(omit)
