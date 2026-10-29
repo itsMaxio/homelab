@@ -18,7 +18,7 @@ provider "proxmox" {
   alias     = "main"
   endpoint  = var.main_endpoint
   api_token = var.main_api_token
-  insecure  = true
+  # insecure  = true
 
   ssh {
     agent    = false
@@ -31,7 +31,7 @@ provider "proxmox" {
   alias     = "backup"
   endpoint  = var.backup_endpoint
   api_token = var.backup_api_token
-  insecure  = true
+  # insecure  = true
 
   ssh {
     agent    = false

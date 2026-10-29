@@ -6,6 +6,12 @@ resource "proxmox_virtual_environment_vm" "vm" {
   node_name   = var.node_name
   vm_id       = var.vm_id
 
+  lifecycle {
+    ignore_changes = [ 
+      disk[0].file_id,
+     ]
+  }
+
   operating_system {
     type = var.operating_system
   }
