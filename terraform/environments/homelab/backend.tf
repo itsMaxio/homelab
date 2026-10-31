@@ -1,5 +1,9 @@
 terraform {
-  backend "local" {
-    path = "state/terraform.tfstate"
+  cloud {
+    organization = "maxio-homelab"
+
+    workspaces {
+      name = "proxmox-infra"
+    }
   }
 }
