@@ -68,22 +68,3 @@ variable "vm_tag" {
   default     = "terraform-managed"
   description = "Tag used to filter virtual machines in NetBox"
 }
-
-
-variable "admin_user" {
-  type        = string
-  default     = "ansible"
-  description = "Default administrative username created by Cloud-Init"
-}
-
-variable "admin_password" {
-  type        = string
-  sensitive   = true
-  description = "Password for administrative username created by Cloud-Init"
-}
-
-variable "ssh_public_keys" {
-  type        = list(string)
-  default     = []
-  description = "Public SSH keys injected into the admin account"
-}

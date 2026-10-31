@@ -150,21 +150,7 @@ variable "search_domain" {
   description = "Search search_domain for DNS resolution"
 }
 
-variable "admin_user" {
-  type        = string
-  default     = "debian"
-  description = "Username for the default admin account created by cloud-init"
-}
-
-variable "admin_password" {
-  type        = string
-  default     = "ansible"
-  sensitive   = true
-  description = "Password for the admin user account"
-}
-
-variable "ssh_public_keys" {
-  type        = list(string)
-  default     = []
-  description = "List of SSH public keys added to the admin user"
+variable "users" {
+  type        = map(list(string))
+  description = "Map of usernames to their list of SSH public keys"
 }

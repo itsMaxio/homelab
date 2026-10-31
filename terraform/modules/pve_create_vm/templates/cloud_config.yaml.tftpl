@@ -1,0 +1,19 @@
+#cloud-config
+hostname: ${hostname}
+%{ if search_domain != null && search_domain != "" ~}
+fqdn: ${hostname}.${search_domain}
+%{ endif ~}
+manage_etc_hosts: true
+
+users:
+%{ for username, keys in users ~}
+  - name: ${username}
+    gecos: ${username}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    lock_passwd: true
+    ssh_authorized_keys:
+%{ for key in keys ~}
+      - "${key}"
+%{ endfor ~}
+%{ endfor ~}

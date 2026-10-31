@@ -36,6 +36,21 @@ resource "proxmox_virtual_environment_file" "network_config" {
   }
 }
 
+resource "proxmox_virtual_environment_file" "cloud_config" {
+  content_type = "snippets"
+  datastore_id = var.snippets_datastore_id
+  node_name    = var.node_name
+
+  source_raw {
+    file_name = "cloud-config-${var.name}.yaml"
+    data = templatefile("${path.module}/templates/cloud_config.yaml.tftpl", {
+      hostname      = var.name
+      search_domain = var.search_domain
+      users         = var.users
+    })
+  }
+}
+
 resource "proxmox_virtual_environment_vm" "vm" {
   name        = var.name
   description = var.description
@@ -93,16 +108,12 @@ resource "proxmox_virtual_environment_vm" "vm" {
     for_each = var.cloud_init_datastore_id != "" ? [1] : []
 
     content {
-      datastore_id         = var.cloud_init_datastore_id
-      interface            = var.cloud_init_interface
-      upgrade              = var.cloud_init_auto_upgrade
-      network_data_file_id = proxmox_virtual_environment_file.network_config.id
+      datastore_id = var.cloud_init_datastore_id
+      interface    = var.cloud_init_interface
+      upgrade      = var.cloud_init_auto_upgrade
 
-      user_account {
-        username = var.admin_user
-        keys     = var.ssh_public_keys
-        password = var.admin_password
-      }
+      network_data_file_id = proxmox_virtual_environment_file.network_config.id
+      user_data_file_id    = proxmox_virtual_environment_file.cloud_config.id
     }
   }
 }

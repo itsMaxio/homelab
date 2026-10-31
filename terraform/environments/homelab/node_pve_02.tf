@@ -56,7 +56,5 @@ module "virtual_machines_on_pve_02" {
   dns_servers        = each.value.dns_servers
   search_domain      = each.value.search_domain
 
-  admin_user      = var.admin_user
-  admin_password  = var.admin_password
-  ssh_public_keys = var.ssh_public_keys
+  users = each.value.users
 }

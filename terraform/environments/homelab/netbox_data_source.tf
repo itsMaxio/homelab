@@ -117,6 +117,8 @@ locals {
       network_interfaces = vm.network_interfaces
       dns_servers        = vm.local_context.dns.nameservers
       search_domain      = vm.local_context.dns.search_domain
+
+      users = vm.local_context.ssh_authorized_keys
     }
   }
 }
