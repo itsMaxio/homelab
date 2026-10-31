@@ -9,38 +9,54 @@ terraform {
 
     netbox = {
       source  = "e-breuninger/netbox"
-      version = "~> 5.8.0"
+      version = "6.0.0-rc.3"
     }
-  }
-}
 
-provider "proxmox" {
-  alias     = "main"
-  endpoint  = var.main_endpoint
-  api_token = var.main_api_token
-  # insecure  = true
-
-  ssh {
-    agent    = false
-    username = "root"
-    password = var.main_ssh_password
-  }
-}
-
-provider "proxmox" {
-  alias     = "backup"
-  endpoint  = var.backup_endpoint
-  api_token = var.backup_api_token
-  # insecure  = true
-
-  ssh {
-    agent    = false
-    username = "root"
-    password = var.backup_ssh_password
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.9.1"
+    }
   }
 }
 
 provider "netbox" {
   server_url = var.netbox_endpoint
   api_token  = var.netbox_api_token
+}
+
+provider "proxmox" {
+  alias     = "pve_01"
+  endpoint  = var.pve_01_endpoint
+  api_token = var.pve_01_api_token
+  insecure  = true
+
+  ssh {
+    agent    = false
+    username = "root"
+    password = var.pve_01_ssh_password
+  }
+}
+
+provider "proxmox" {
+  alias     = "pve_02"
+  endpoint  = var.pve_02_endpoint
+  api_token = var.pve_02_api_token
+  insecure  = true
+
+  ssh {
+    agent    = false
+    password = var.pve_02_ssh_password
+  }
+}
+
+provider "proxmox" {
+  alias     = "pve_03"
+  endpoint  = var.pve_03_endpoint
+  api_token = var.pve_03_api_token
+  insecure  = true
+
+  ssh {
+    agent    = false
+    password = var.pve_03_ssh_password
+  }
 }

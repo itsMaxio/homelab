@@ -1,0 +1,29 @@
+version: 2
+ethernets:
+%{ for interface in interfaces ~}
+  ${interface.name}:
+    match:
+      macaddress: "${lower(interface.mac_address)}"
+    set-name: "${interface.name}"
+    addresses:
+      - "${interface.ip}/${interface.cidr}"
+%{ if interface.gateway != null && interface.gateway != "" ~}
+    routes:
+      - to: default
+        via: "${interface.gateway}"
+%{ endif ~}
+%{ if interface.name == dns_interface_name && length(dns_servers) > 0 ~}
+    nameservers:
+      addresses:
+%{ for dns in dns_servers ~}
+        - "${dns}"
+%{ endfor ~}
+%{ if domain != null && domain != "" ~}
+      search:
+        - "${domain}"
+%{ endif ~}
+%{ endif ~}
+%{ if interface.mtu != null ~}
+    mtu: ${interface.mtu}
+%{ endif ~}
+%{ endfor ~}

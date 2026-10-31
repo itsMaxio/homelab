@@ -10,8 +10,8 @@ variable "description" {
 }
 
 variable "tags" {
-  type = list(string)
-  default = [ "" ]
+  type        = list(string)
+  default     = []
   description = "Tags of the virtual machine"
 }
 
@@ -26,14 +26,15 @@ variable "vm_id" {
 }
 
 variable "operating_system" {
-  type = string
-  default = "l26"
-  description = "Operating system of the virtual machine"
+  type        = string
+  default     = "l26"
+  description = "Operating system type in Proxmox"
 }
 
 variable "scsi_controller" {
-  type = string
-  description = "SCSI controller"
+  type        = string
+  default     = "virtio-scsi-single"
+  description = "SCSI controller model"
 }
 
 variable "cpu_cores" {
@@ -43,7 +44,8 @@ variable "cpu_cores" {
 
 variable "cpu_type" {
   type        = string
-  description = "VM type of CPU"
+  default     = "host"
+  description = "CPU emulation model in Proxmox"
 }
 
 variable "memory" {
@@ -51,104 +53,118 @@ variable "memory" {
   description = "Amount of RAM memory in megabytes"
 }
 
-variable "boot_drive_datastore_id" {
+variable "boot_disk_datastore_id" {
   type        = string
   description = "ID of the Proxmox datastore for the main disk"
 }
 
-variable "boot_drive_interface" {
-  type = string
-  default = "scsi0"
-  description = "Interface type of the virtual machine disk"
-}
-
-variable "boot_drive_format" {
-  type = string
-  default = "qcow2"
-  description = "Boot drive file format"
-}
-
-variable "auto_upgrade" {
-  type = bool
-  default = false
-  description = "Enable auto upgrade after start"
-}
-
-variable "boot_drive_file_id" {
+variable "boot_disk_file_id" {
   type        = string
   description = "ID of the cloud image file used to create the VM"
 }
 
-variable "boot_drive_size" {
+variable "boot_disk_interface" {
+  type        = string
+  default     = "scsi0"
+  description = "Bus interface of the boot disk (e.g. scsi0)"
+}
+
+variable "boot_disk_format" {
+  type        = string
+  default     = "raw"
+  description = "Boot disk image format (raw, qcow2, vmdk)"
+}
+
+variable "boot_disk_size" {
   type        = number
-  description = "Size of the main disk in gigabytes"
+  description = "Size of the boot disk in gigabytes"
 }
 
-variable "boot_drive_discard" {
-  type        = string
-  default     = "on"
-  description = "Enable discard or TRIM for the disk"
-}
-
-variable "boot_drive_io_thread" {
+variable "boot_disk_discard" {
   type        = bool
-  default     = true
-  description = "Enable IO thread for the disk"
+  default     = false
+  description = "Enable discard or TRIM for the boot disk"
 }
 
-variable "boot_drive_ssd_emulation" {
+variable "boot_disk_io_thread" {
   type        = bool
-  default     = true
-  description = "Enable SSD emulation for the disk"
+  default     = false
+  description = "Enable dedicated IO thread for the boot disk"
 }
 
-variable "network_devices" {
-  type = list(object({
-    bridge  = string
-    vlan_id = optional(number)
-  }))
-  default     = []
-  description = "List of network devices to attach to the VM"
+variable "boot_disk_ssd_emulation" {
+  type        = bool
+  default     = false
+  description = "Enable SSD emulation for the boot disk"
 }
 
-variable "initialization_datastore_id" {
+variable "cloud_init_datastore_id" {
   type        = string
-  default = ""
+  default     = ""
   description = "ID of the Proxmox datastore for the cloud-init disk"
 }
 
-variable "initialization_interface" {
+variable "cloud_init_interface" {
   type        = string
-  default = "ide2"
-  description = "The hardware interface to connect the cloud-init image to"
+  default     = "ide2"
+  description = "Hardware interface for the cloud-init drive"
 }
 
-variable "ipv4_address" {
-  type        = string
-  default = ""
-  description = "Static IPv4 address with CIDR notation for the management interface"
+variable "cloud_init_auto_upgrade" {
+  type        = bool
+  default     = false
+  description = "Enable package upgrade on first boot via Cloud-Init"
 }
 
-variable "ipv4_gateway" {
+variable "snippets_datastore_id" {
   type        = string
-  default = ""
-  description = "IPv4 gateway address for the management network"
+  default     = "local"
+  description = "ID of the Proxmox datastore for snippets files"
+}
+
+variable "network_interfaces" {
+  type = list(object({
+    name        = string
+    bridge      = string
+    vlan_id     = optional(number)
+    mtu         = optional(number)
+    queues      = optional(number)
+    mac_address = optional(string)
+    ip          = string
+    cidr        = number
+    gateway     = optional(string)
+  }))
+  default     = []
+  description = "List of network interfaces to attach to the VM"
 }
 
 variable "dns_servers" {
-  type = list(string)
-  default = []
-  description = "List of DNS servers"
+  type        = list(string)
+  default     = []
+  description = "List of DNS nameservers for the VM"
+}
+
+variable "domain" {
+  type        = string
+  default     = null
+  description = "Search domain for DNS resolution"
 }
 
 variable "admin_user" {
   type        = string
-  default = ""
+  default     = "debian"
   description = "Username for the default admin account created by cloud-init"
+}
+
+variable "admin_password" {
+  type        = string
+  default     = "ansible"
+  sensitive   = true
+  description = "Password for the admin user account"
 }
 
 variable "ssh_public_keys" {
   type        = list(string)
-  default = []
+  default     = []
   description = "List of SSH public keys added to the admin user"
 }

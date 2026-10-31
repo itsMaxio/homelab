@@ -1,16 +1,55 @@
+resource "random_id" "mac_suffix" {
+  for_each    = { for interface in var.network_interfaces : interface.name => interface }
+  byte_length = 3
+}
+
+locals {
+  interfaces_with_mac = [
+    for interface in var.network_interfaces : merge(interface, {
+      mac_address = interface.mac_address != null && interface.mac_address != "" ? interface.mac_address : format("bc:24:11:%s:%s:%s",
+        substr(random_id.mac_suffix[interface.name].hex, 0, 2),
+        substr(random_id.mac_suffix[interface.name].hex, 2, 2),
+        substr(random_id.mac_suffix[interface.name].hex, 4, 2)
+      )
+    })
+  ]
+
+  dns_interface_name = coalesce(
+    one([for interface in var.network_interfaces : interface.name if interface.gateway != null && interface.gateway != ""]),
+    try(var.network_interfaces[0].name, "")
+  )
+}
+
+resource "proxmox_virtual_environment_file" "network_config" {
+  content_type = "snippets"
+  datastore_id = var.snippets_datastore_id
+  node_name    = var.node_name
+
+  source_raw {
+    file_name = "net-config-${var.name}.yaml"
+    data = templatefile("${path.module}/templates/network_config.yaml.tftpl", {
+      interfaces         = local.interfaces_with_mac
+      dns_servers        = var.dns_servers
+      domain             = var.domain
+      dns_interface_name = local.dns_interface_name
+    })
+  }
+}
+
 resource "proxmox_virtual_environment_vm" "vm" {
   name        = var.name
   description = var.description
-  tags = var.tags
-
+  tags        = var.tags
   node_name   = var.node_name
   vm_id       = var.vm_id
 
   lifecycle {
-    ignore_changes = [ 
+    ignore_changes = [
       disk[0].file_id,
-     ]
+    ]
   }
+
+  serial_device {}
 
   operating_system {
     type = var.operating_system
@@ -28,50 +67,41 @@ resource "proxmox_virtual_environment_vm" "vm" {
   }
 
   disk {
-    datastore_id = var.boot_drive_datastore_id
-    file_id      = var.boot_drive_file_id
-    interface    = var.boot_drive_interface
-    file_format = var.boot_drive_format
-    size         = var.boot_drive_size
-
-    discard  = var.boot_drive_discard
-    iothread = var.boot_drive_io_thread
-    ssd      = var.boot_drive_ssd_emulation
+    datastore_id = var.boot_disk_datastore_id
+    file_id      = var.boot_disk_file_id
+    interface    = var.boot_disk_interface
+    file_format  = var.boot_disk_format
+    size         = var.boot_disk_size
+    discard      = var.boot_disk_discard ? "on" : "ignore"
+    iothread     = var.boot_disk_io_thread
+    ssd          = var.boot_disk_ssd_emulation
   }
 
   dynamic "network_device" {
-    for_each = var.network_devices
-
+    for_each = local.interfaces_with_mac
     content {
-      bridge  = network_device.value.bridge
-      vlan_id = network_device.value.vlan_id
+      bridge      = network_device.value.bridge
+      model       = "virtio"
+      vlan_id     = network_device.value.vlan_id
+      mac_address = upper(network_device.value.mac_address)
+      mtu         = network_device.value.mtu
+      queues      = network_device.value.queues
     }
   }
 
   dynamic "initialization" {
-    for_each = var.initialization_datastore_id != "" ? [1] : []
+    for_each = var.cloud_init_datastore_id != "" ? [1] : []
 
     content {
-      datastore_id = var.initialization_datastore_id
-      interface = var.initialization_interface
-
-      upgrade = var.auto_upgrade
-
-      ip_config {
-        ipv4 {
-          address = var.ipv4_address
-          gateway = var.ipv4_gateway
-        }
-      }
-
-      dns {
-        servers = var.dns_servers
-      }
+      datastore_id         = var.cloud_init_datastore_id
+      interface            = var.cloud_init_interface
+      upgrade              = var.cloud_init_auto_upgrade
+      network_data_file_id = proxmox_virtual_environment_file.network_config.id
 
       user_account {
         username = var.admin_user
         keys     = var.ssh_public_keys
-        password = "ansible"
+        password = var.admin_password
       }
     }
   }

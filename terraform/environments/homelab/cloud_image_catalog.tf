@@ -16,5 +16,9 @@ locals {
       url       = "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2"
       file_name = "debian-12-cloudimg.img"
     }
+    "debian-13" = {
+      url       = "https://cloud.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2"
+      file_name = "debian-12-cloudimg.img"
+    }
   }
 }

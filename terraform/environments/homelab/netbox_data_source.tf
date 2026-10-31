@@ -1,58 +1,86 @@
 data "netbox_virtual_machines" "all_vms_with_terraform_tag" {
-  filter {
-    name  = "tag"
-    value = var.vm_tag
-  }
+  filters = [
+    {
+      name  = "tag"
+      value = var.vm_tag
+    },
+  ]
 }
 
-data "netbox_tags" "all_tags" {}
+data "netbox_devices" "all_devices" {}
 
-data "netbox_virtual_disk" "all_virtual_disks" {}
+data "netbox_platforms" "all_platforms" {}
 
-data "netbox_interfaces" "all_interfaces" {}
+data "netbox_virtual_disks" "all_virtual_disks" {}
+
+data "netbox_virtual_machine_interfaces" "all_virtual_machine_interfaces" {}
+
+data "netbox_ip_addresses" "all_ip_addresses" {}
+
+data "netbox_vlans" "all_vlans" {}
 
 locals {
+  devices_by_id = {
+    for device in data.netbox_devices.all_devices.devices :
+    device.id => device
+  }
+
+  platforms_by_id = {
+    for platform in data.netbox_platforms.all_platforms.platforms :
+    platform.id => platform
+  }
+
+  vlans_by_id = {
+    for vlan in data.netbox_vlans.all_vlans.vlans :
+    vlan.id => vlan.vid
+  }
+
+  interfaces_by_vm_and_index = {
+    for interface in data.netbox_virtual_machine_interfaces.all_virtual_machine_interfaces.virtual_machine_interfaces :
+    "${interface.virtual_machine_id}_${tonumber(regex("[0-9]+$", interface.name))}" => interface
+    if interface.virtual_machine_id != null && can(regex("[0-9]+$", interface.name))
+  }
+
+  ipv4_by_interface_id = {
+    for ip in data.netbox_ip_addresses.all_ip_addresses.ip_addresses :
+    ip.virtual_machine_interface_id => ip...
+    if ip.virtual_machine_interface_id != null && ip.family == 4
+  }
+
   vms_raw = {
-    for vm in data.netbox_virtual_machines.all_vms_with_terraform_tag.vms :
+    for vm in data.netbox_virtual_machines.all_vms_with_terraform_tag.virtual_machines :
     vm.name => merge(
       vm,
       {
-        tags = [
-          for netbox_tag in data.netbox_tags.all_tags.tags :
-          netbox_tag
-          if contains(vm.tag_ids, netbox_tag.tag_id)
-        ]
+        local_context = jsondecode(coalesce(vm.local_context_data, "{}"))
 
-        config_context = jsondecode(vm.config_context)
-
-        virtual_disks = [
-          for virtual_disk in data.netbox_virtual_disk.all_virtual_disks.virtual_disks :
+        boot_disk = one([
+          for virtual_disk in data.netbox_virtual_disks.all_virtual_disks.virtual_disks :
           virtual_disk
-          if virtual_disk.virtual_machine_id == vm.vm_id
-        ]
-
-        boot_drive = one([
-          for virtual_disk in data.netbox_virtual_disk.all_virtual_disks.virtual_disks :
-          virtual_disk
-          if virtual_disk.virtual_machine_id == vm.vm_id && tobool(virtual_disk.custom_fields.proxmox_boot_drive)
+          if virtual_disk.virtual_machine_id == vm.id && tobool(virtual_disk.custom_fields.proxmox_boot_drive)
         ])
 
-        cloud_init_drive = one([
-          for virtual_disk in data.netbox_virtual_disk.all_virtual_disks.virtual_disks :
+        cloud_init_disk = one([
+          for virtual_disk in data.netbox_virtual_disks.all_virtual_disks.virtual_disks :
           virtual_disk
-          if virtual_disk.virtual_machine_id == vm.vm_id && tobool(virtual_disk.custom_fields.cloud_init_drive)
+          if virtual_disk.virtual_machine_id == vm.id && tobool(virtual_disk.custom_fields.proxmox_cloud_init_drive)
         ])
 
-        network_devices = [
+        network_interfaces = [
           for interface in [
-            for index in range(0, 8) : one([
-              for iface_data in data.netbox_interfaces.all_interfaces.interfaces :
-              iface_data
-              if iface_data.vm_id == vm.vm_id && try(tonumber(regex("[0-9]+$", iface_data.name)) == index, false)
-            ])
+            for index in range(0, 8) : lookup(local.interfaces_by_vm_and_index, "${vm.id}_${index}", null)
             ] : {
-            bridge  = vm.custom_fields.proxmox_default_bridge_interface
-            vlan_id = length(interface.untagged_vlan) > 0 ? interface.untagged_vlan[0].vid : null
+            name        = interface.name
+            bridge      = interface.custom_fields.proxmox_interface_bridge
+            vlan_id     = interface.untagged_vlan_id != null ? local.vlans_by_id[interface.untagged_vlan_id] : null
+            mtu         = interface.mtu
+            queues      = tonumber(interface.custom_fields.proxmox_interface_queues)
+            mac_address = null
+
+            ip   = split("/", local.ipv4_by_interface_id[interface.id][0].ip_address)[0]
+            cidr = tonumber(split("/", local.ipv4_by_interface_id[interface.id][0].ip_address)[1])
+
+            gateway = try(interface.custom_fields["proxmox_interface_gateway"] != "" ? interface.custom_fields["proxmox_interface_gateway"] : null, null)
           }
           if interface != null
         ]
@@ -63,30 +91,32 @@ locals {
   vms = {
     for name, vm in local.vms_raw :
     name => {
-      description                 = vm.description
-      tags                        = [for tag in vm.tags : tag.slug]
-      node_name                   = vm.device_name
-      vm_id                       = tonumber(vm.custom_fields.proxmox_vm_id)
-      platform                    = vm.platform_slug
-      cores                       = tonumber(vm.custom_fields.proxmox_cores)
-      cpu_type                    = vm.custom_fields.proxmox_cpu_type
-      proxmox_scsi_controller     = vm.custom_fields.proxmox_scsi_controller
-      memory                      = vm.memory_mb
-      boot_drive_datastore_id     = vm.boot_drive.custom_fields.proxmox_datastore_id
-      interface                   = vm.boot_drive.name
-      disk_size                   = floor(vm.boot_drive.size_mb / 1024)
-      discard                     = tobool(vm.boot_drive.custom_fields.proxmox_discard)
-      io_thread                   = tobool(vm.boot_drive.custom_fields.proxmox_io_thread)
-      ssd_emulation               = tobool(vm.boot_drive.custom_fields.proxmox_ssd_emulation)
-      network_devices             = vm.network_devices
-      initialization_datastore_id = vm.cloud_init_drive.custom_fields.proxmox_datastore_id
-      initialization_interface    = vm.cloud_init_drive.name
-      auto_upgrade                = vm.custom_fields.cloud_init_auto_upgrade
-      ipv4_address                = vm.primary_ip4
-      ipv4_gateway                = cidrhost(vm.primary_ip4, 1)
-      dns_servers                 = vm.config_context.dns_servers
-      admin_user                  = vm.config_context.ansible_user
-      ssh_public_keys             = vm.config_context.ssh_authorized_keys[vm.config_context.ansible_user]
+      name            = name
+      vm_id           = tonumber(vm.custom_fields.proxmox_vm_id)
+      description     = vm.description
+      tags            = vm.tags
+      node_name       = local.devices_by_id[vm.device_id].name
+      platform        = local.platforms_by_id[vm.platform_id].slug
+      cpu_cores       = tonumber(vm.custom_fields.proxmox_cores)
+      cpu_type        = jsondecode(vm.custom_fields.proxmox_cpu_type).value
+      scsi_controller = jsondecode(vm.custom_fields.proxmox_scsi_controller).value
+      memory          = vm.memory_mb
+
+      boot_disk_datastore_id  = vm.boot_disk.custom_fields.proxmox_datastore_id
+      boot_disk_interface     = vm.boot_disk.name
+      boot_disk_size          = floor(vm.boot_disk.size_mb / 1024)
+      boot_disk_format        = jsondecode(vm.boot_disk.custom_fields.proxmox_drive_format).value
+      boot_disk_discard       = tobool(vm.boot_disk.custom_fields.proxmox_discard)
+      boot_disk_io_thread     = tobool(vm.boot_disk.custom_fields.proxmox_io_thread)
+      boot_disk_ssd_emulation = tobool(vm.boot_disk.custom_fields.proxmox_ssd_emulation)
+
+      cloud_init_datastore_id = vm.cloud_init_disk.custom_fields.proxmox_datastore_id
+      cloud_init_interface    = vm.cloud_init_disk.name
+      cloud_init_auto_upgrade = tobool(vm.custom_fields.proxmox_cloud_init_auto_upgrade)
+
+      network_interfaces = vm.network_interfaces
+      dns_servers        = vm.local_context.dns.nameservers
+      domain             = vm.local_context.dns.domain
     }
   }
 }
