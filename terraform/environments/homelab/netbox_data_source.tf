@@ -97,6 +97,7 @@ locals {
       tags            = vm.tags
       node_name       = local.devices_by_id[vm.device_id].name
       platform        = local.platforms_by_id[vm.platform_id].slug
+      protection      = contains(try(vm.tags, []), var.protected_vm_tag)
       cpu_cores       = tonumber(vm.custom_fields.proxmox_cores)
       cpu_type        = jsondecode(vm.custom_fields.proxmox_cpu_type).value
       scsi_controller = jsondecode(vm.custom_fields.proxmox_scsi_controller).value

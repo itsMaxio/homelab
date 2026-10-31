@@ -68,3 +68,9 @@ variable "vm_tag" {
   default     = "terraform-managed"
   description = "Tag used to filter virtual machines in NetBox"
 }
+
+variable "protected_vm_tag" {
+  type        = string
+  default     = "terraform-protected"
+  description = "Tag in NetBox indicating that the VM must have lifecycle prevent_destroy enabled"
+}

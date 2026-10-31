@@ -57,12 +57,20 @@ resource "proxmox_virtual_environment_vm" "vm" {
   tags        = var.tags
   node_name   = var.node_name
   vm_id       = var.vm_id
+  protection  = var.protection
 
   lifecycle {
     ignore_changes = [
       disk[0].file_id,
+      initialization[0].network_data_file_id,
+      initialization[0].user_data_file_id,
     ]
   }
+
+  depends_on = [
+    proxmox_virtual_environment_file.network_config,
+    proxmox_virtual_environment_file.cloud_config,
+  ]
 
   serial_device {}
 

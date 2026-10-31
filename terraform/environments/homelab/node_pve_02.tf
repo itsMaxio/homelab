@@ -34,6 +34,7 @@ module "virtual_machines_on_pve_02" {
   # node_name               = each.value.node_name
   node_name       = "backup"
   vm_id           = each.value.vm_id
+  protection      = each.value.protection
   cpu_cores       = each.value.cpu_cores
   cpu_type        = each.value.cpu_type
   scsi_controller = each.value.scsi_controller

@@ -25,6 +25,12 @@ variable "vm_id" {
   description = "ID of the virtual machine in Proxmox"
 }
 
+variable "protection" {
+  type        = bool
+  default     = false
+  description = "Enable Proxmox VM protection flag to prevent accidental removal"
+}
+
 variable "operating_system" {
   type        = string
   default     = "l26"
