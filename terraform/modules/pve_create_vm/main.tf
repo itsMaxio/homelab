@@ -30,7 +30,7 @@ resource "proxmox_virtual_environment_file" "network_config" {
     data = templatefile("${path.module}/templates/network_config.yaml.tftpl", {
       interfaces         = local.interfaces_with_mac
       dns_servers        = var.dns_servers
-      domain             = var.domain
+      search_domain      = var.search_domain
       dns_interface_name = local.dns_interface_name
     })
   }

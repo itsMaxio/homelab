@@ -54,7 +54,7 @@ module "virtual_machines_on_pve_02" {
 
   network_interfaces = each.value.network_interfaces
   dns_servers        = each.value.dns_servers
-  domain             = each.value.domain
+  search_domain      = each.value.search_domain
 
   admin_user      = var.admin_user
   admin_password  = var.admin_password

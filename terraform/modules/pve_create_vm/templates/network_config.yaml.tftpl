@@ -18,9 +18,9 @@ ethernets:
 %{ for dns in dns_servers ~}
         - "${dns}"
 %{ endfor ~}
-%{ if domain != null && domain != "" ~}
+%{ if search_domain != null && search_domain != "" ~}
       search:
-        - "${domain}"
+        - "${search_domain}"
 %{ endif ~}
 %{ endif ~}
 %{ if interface.mtu != null ~}

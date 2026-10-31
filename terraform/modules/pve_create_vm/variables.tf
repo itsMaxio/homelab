@@ -144,10 +144,10 @@ variable "dns_servers" {
   description = "List of DNS nameservers for the VM"
 }
 
-variable "domain" {
+variable "search_domain" {
   type        = string
   default     = null
-  description = "Search domain for DNS resolution"
+  description = "Search search_domain for DNS resolution"
 }
 
 variable "admin_user" {

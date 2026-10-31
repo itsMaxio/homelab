@@ -116,7 +116,7 @@ locals {
 
       network_interfaces = vm.network_interfaces
       dns_servers        = vm.local_context.dns.nameservers
-      domain             = vm.local_context.dns.domain
+      search_domain      = vm.local_context.dns.search_domain
     }
   }
 }
