@@ -10,7 +10,9 @@
   ],
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:4.1.3": {},
-    "ghcr.io/devcontainers/features/terraform:1.5.0": {}
+    "ghcr.io/devcontainers/features/terraform:1.5.0": {
+      "version": "1.17.1"
+    }
   },
   // "postCreateCommand": "bash /workspace/.devcontainer/aio-box/post-container-start.sh",
   "postStartCommand": "bash /workspace/.devcontainer/aio-box/post-container-start.sh",
