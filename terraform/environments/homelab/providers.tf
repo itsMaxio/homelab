@@ -45,6 +45,7 @@ provider "proxmox" {
 
   ssh {
     agent    = false
+    username = "root"
     password = var.pve_02_ssh_password
   }
 }
@@ -57,6 +58,7 @@ provider "proxmox" {
 
   ssh {
     agent    = false
+    username = "root"
     password = var.pve_03_ssh_password
   }
 }
