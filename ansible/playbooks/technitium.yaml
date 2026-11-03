@@ -1,0 +1,40 @@
+---
+- name: Initial configuration for DNS Server
+  hosts: dns-server:&ansible-managed
+  become: true
+  vars:
+    ctx: "{{ config_context[0] }}"
+    dns_servers: "{{ ctx.dns.nameservers }}"
+
+  pre_tasks:
+    - name: Stop and disable systemd-resolved service
+      ansible.builtin.systemd:
+        name: systemd-resolved
+        state: stopped
+        enabled: false
+
+    - name: Check if /etc/resolv.conf file is symlink
+      ansible.builtin.stat:
+        path: /etc/resolv.conf
+      register: file
+
+    - name: Remove existing /etc/resolv.conf file
+      ansible.builtin.file:
+        path: /etc/resolv.conf
+        state: absent
+      when: file.stat.islnk is defined and file.stat.islnk
+
+    - name: Generate static /etc/resolv.conf
+      ansible.builtin.copy:
+        dest: /etc/resolv.conf
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          # Managed by Ansible
+          {% for server in dns_servers %}
+          nameserver {{ server }}
+          {% endfor %}
+
+  roles:
+    - geerlingguy.docker
