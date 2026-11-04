@@ -1,0 +1,19 @@
+# (https://oneuptime.com/blog/post/2026-02-21-ansible-configure-timezone-settings)
+---
+- name: Configure Timezones
+  hosts: dns-server:&ansible-managed
+  serial: 1
+  become: true
+  vars:
+    system_timezone: "{{ config_context[0].system_timezone }}"
+
+  tasks:
+    - name: Set the system timezone
+      community.general.timezone:
+        name: "{{ system_timezone }}"
+      notify: Reboot system
+
+  handlers:
+    - name: Reboot system
+      ansible.builtin.reboot:
+        reboot_timeout: 300
