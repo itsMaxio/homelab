@@ -47,6 +47,7 @@
       checks: "{{ ctx.borg_checks }}"
       extra:
         archive_name_format: "{hostname}-{now:%Y-%m-%dT%H:%M:%S.%f}"
+        numeric_ids: true
         verbosity: 1
         syslog_verbosity: 1
         statistics: standard
@@ -85,6 +86,13 @@
         borg_passphrase: "{{ lookup('community.general.onepassword', 'borgmatic', field=inventory_hostname, vault='Ansible') }}"
       delegate_to: localhost
       become: false
+
+    - name: Check if Borg passphrase is not null or empty
+      ansible.builtin.assert:
+        that:
+          - borg_passphrase is defined
+          - borg_passphrase is not none
+          - borg_passphrase | string | trim | length > 0
 
     - name: Install packages needed for SSH config and key creation
       ansible.builtin.apt:
