@@ -2,6 +2,8 @@ plugin: netbox.netbox.nb_inventory
 
 validate_certs: false
 
+ansible_host_dns_name: true
+
 config_context: true
 # flatten_custom_fields: true
 # flatten_config_context: true
