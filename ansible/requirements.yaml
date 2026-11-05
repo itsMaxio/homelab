@@ -7,3 +7,4 @@ collections:
 
 roles:
   - name: borgbase.ansible_role_borgbackup
+  - name: geerlingguy.docker
