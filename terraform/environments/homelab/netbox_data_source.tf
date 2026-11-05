@@ -52,7 +52,7 @@ locals {
     vm.name => merge(
       vm,
       {
-        local_context = jsondecode(coalesce(vm.local_context_data, "{}"))
+        config_context = jsondecode(coalesce(vm.config_context, "{}"))
 
         boot_disk = one([
           for virtual_disk in data.netbox_virtual_disks.all_virtual_disks.virtual_disks :
@@ -116,10 +116,10 @@ locals {
       cloud_init_auto_upgrade = tobool(vm.custom_fields.proxmox_cloud_init_auto_upgrade)
 
       network_interfaces = vm.network_interfaces
-      dns_servers        = vm.local_context.dns.nameservers
-      search_domain      = vm.local_context.dns.search_domain
+      dns_servers        = vm.config_context.dns.nameservers
+      search_domain      = vm.config_context.dns.search_domain
 
-      users = vm.local_context.ssh_authorized_keys
+      users = vm.config_context.ssh_authorized_keys
     }
   }
 }

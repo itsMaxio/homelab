@@ -9,7 +9,7 @@ terraform {
 
     netbox = {
       source  = "e-breuninger/netbox"
-      version = "6.0.0-rc.3"
+      version = "~> 6.0.0"
     }
 
     random = {
