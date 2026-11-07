@@ -10,20 +10,9 @@ One or two sentences about what the role does
 
 ## Role Variables
 
-Defaults are in `defaults/main.yaml`, argument validation in `meta/argument_specs.yaml`
-
-> Variables with the value `<REQUIRED>` have no default and must be set
-
-```yaml
-role_name_example: "default" # (STRING) What it is for, allowed values
-role_name_port: 8006 # (INT) What it is for
-role_name_enabled: true # (BOOL) What it is for
-role_name_secret: <REQUIRED> # (STRING) What it is for. Keep it in Ansible Vault
-
-role_name_items: # (LIST of DICT) Default: []. What the list describes
-  - name: <REQUIRED> # (STRING) What it is for
-    state: present # (STRING) One of: present, absent
-```
+- All variables and default values are documented in `defaults/main.yaml`
+- Argument validation is defined in `meta/argument_specs.yaml`
+- Required variables do not have default values and are commented out in `defaults/main.yaml`. You must define them in your inventory or playbook before running the role
 
 Output variables:
 
