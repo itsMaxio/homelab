@@ -1,0 +1,69 @@
+---
+### Installation
+borg_backup_install_method: "pip"
+borg_backup_install_venv_path: "/opt/borgmatic"
+borg_backup_install_borg_version: ">=1.4,<1.5"
+borg_backup_install_borgmatic_version: ">=2.0.0,<3"
+
+### SSH client configuration
+borg_backup_ssh_user: "root"
+borg_backup_ssh_key_path: "/root/.ssh/id_ed25519_borg"
+borg_backup_ssh_command: "ssh"
+
+### Remote NAS repository settings
+# borg_backup_nas_hostname: "10.10.25.1"
+borg_backup_nas_ssh_port: 22
+borg_backup_nas_ssh_alias: "nas-borg"
+borg_backup_nas_check_connectivity: true
+borg_backup_nas_user: "backup-{{ inventory_hostname }}"
+# borg_backup_nas_base_directory: "/mnt/storage/borg"
+borg_backup_nas_repository_directory: "backup-{{ inventory_hostname }}"
+
+### Borgmatic archive and repository settings
+borg_backup_configuration_name: "config.yaml"
+# borg_backup_source_directories:
+#   - "/docker"
+# borg_backup_encryption_passphrase: "secret-passphrase-example"
+borg_backup_compression: "auto,zstd"
+borg_backup_lock_wait_time: 30
+borg_backup_one_file_system: true
+borg_backup_exclude_caches: true
+borg_backup_store_access_time: false
+borg_backup_store_change_time: true
+borg_backup_archive_name_format: "{hostname}-{now:%Y-%m-%dT%H:%M:%S.%f}"
+borg_backup_numeric_ids: true
+borg_backup_verbosity: 1
+borg_backup_syslog_verbosity: 1
+
+### Retention and consistency checks
+borg_backup_retention_policy:
+  keep_daily: 7
+  keep_weekly: 4
+  keep_monthly: 6
+
+borg_backup_consistency_checks:
+  - name: "repository"
+    frequency: "2 weeks"
+  - name: "archives"
+    frequency: "1 month"
+
+### Pre and post backup command hooks
+borg_backup_before_backup_commands: []
+borg_backup_after_backup_commands: []
+borg_backup_on_error_commands: []
+
+### Cron schedule
+borg_backup_cron_hour: "2"
+borg_backup_cron_minute: "0"
+
+### Healthchecks integration
+borg_backup_healthchecks_enabled: true
+# borg_backup_healthchecks_url: "https://hc.example.com"
+# borg_backup_healthchecks_api_key: "secret-api-key-example"
+borg_backup_healthchecks_check_name: "{{ inventory_hostname }}"
+borg_backup_healthchecks_check_slug: "{{ inventory_hostname }}"
+borg_backup_healthchecks_check_tags: "borg {{ inventory_hostname }}"
+borg_backup_healthchecks_description: "Borg backup of {{ inventory_hostname }}"
+borg_backup_healthchecks_timezone: "Europe/Warsaw"
+borg_backup_healthchecks_grace_time: 3600
+borg_backup_healthchecks_send_logs: true

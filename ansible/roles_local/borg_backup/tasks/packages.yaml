@@ -1,0 +1,9 @@
+- name: Install packages required for SSH key and configuration management
+  ansible.builtin.apt:
+    name:
+      - "openssh-client"
+      - "python3-paramiko"
+    state: "present"
+    update_cache: true
+    cache_valid_time: 3600
+  tags: [borg_backup, packages]

@@ -1,0 +1,54 @@
+- name: "DEBUG : SSH client variables"
+  ansible.builtin.debug:
+    msg:
+      - "ssh_user: {{ borg_backup_ssh_user }}"
+      - "nas_ssh_alias: {{ borg_backup_nas_ssh_alias }}"
+      - "nas_ssh_port: {{ borg_backup_nas_ssh_port }}"
+      - "nas_hostname: {{ borg_backup_nas_hostname }}"
+      - "ssh_key_path: {{ borg_backup_ssh_key_path }}"
+      - "nas_user: {{ borg_backup_nas_user }}"
+      - "nas_base_directory: {{ borg_backup_nas_base_directory }}"
+      - "nas_repository_directory: {{ borg_backup_nas_repository_directory }}"
+  tags: [never, debug]
+
+- name: Verify connection to NAS SSH port
+  ansible.builtin.wait_for:
+    host: "{{ borg_backup_nas_hostname }}"
+    port: "{{ borg_backup_nas_ssh_port }}"
+    state: "started"
+    timeout: 5
+  when: borg_backup_nas_check_connectivity | bool
+  tags: [borg_backup, ssh_client]
+
+- name: Configure SSH client entry for NAS host
+  community.general.ssh_config:
+    user: "{{ borg_backup_ssh_user }}"
+    host: "{{ borg_backup_nas_ssh_alias }}"
+    port: "{{ borg_backup_nas_ssh_port }}"
+    hostname: "{{ borg_backup_nas_hostname }}"
+    identity_file: "{{ borg_backup_ssh_key_path }}"
+    remote_user: "{{ borg_backup_nas_user }}"
+    identities_only: true
+    strict_host_key_checking: "accept-new"
+    state: "present"
+  tags: [borg_backup, ssh_client]
+
+- name: Read public SSH key for Borg backup
+  ansible.builtin.slurp:
+    src: "{{ borg_backup_ssh_key_path }}.pub"
+  register: _borg_backup_public_key
+  tags: [borg_backup, ssh_client]
+
+- name: Set authorized key entry output variable
+  ansible.builtin.set_fact:
+    borg_backup_authorized_key: >-
+      restrict,command='TMPDIR={{ borg_backup_nas_base_directory }}/tmp
+      {{ borg_backup_nas_base_directory }}/borg serve
+      --restrict-to-repository {{ borg_backup_nas_base_directory }}/{{ borg_backup_nas_repository_directory }}/repo'
+      {{ _borg_backup_public_key.content | b64decode | trim }}
+  tags: [borg_backup, ssh_client]
+
+- name: Print authorized keys line for NAS user
+  ansible.builtin.debug:
+    msg: "{{ borg_backup_authorized_key }}"
+  tags: [borg_backup, ssh_client]

@@ -1,0 +1,39 @@
+archive_name_format: {{ borg_backup_archive_name_format | to_json }}
+numeric_ids: {{ borg_backup_numeric_ids | bool | to_json }}
+verbosity: {{ borg_backup_verbosity | int }}
+syslog_verbosity: {{ borg_backup_syslog_verbosity | int }}
+statistics: "standard"
+list_details: true
+{% if borg_backup_healthchecks_enabled | bool %}
+healthchecks:
+  ping_url: {{ _borg_backup_healthchecks_ping_url | to_json }}
+  send_logs: {{ borg_backup_healthchecks_send_logs | bool | to_json }}
+{% endif %}
+{% if borg_backup_before_backup_commands | length > 0
+   or borg_backup_after_backup_commands | length > 0
+   or borg_backup_on_error_commands | length > 0 %}
+commands:
+{% if borg_backup_before_backup_commands | length > 0 %}
+  - before: "action"
+    when: ["create"]
+    run:
+{% for command in borg_backup_before_backup_commands %}
+      - {{ command | to_json }}
+{% endfor %}
+{% endif %}
+{% if borg_backup_after_backup_commands | length > 0 %}
+  - after: "action"
+    when: ["create"]
+    run:
+{% for command in borg_backup_after_backup_commands %}
+      - {{ command | to_json }}
+{% endfor %}
+{% endif %}
+{% if borg_backup_on_error_commands | length > 0 %}
+  - after: "error"
+    run:
+{% for command in borg_backup_on_error_commands %}
+      - {{ command | to_json }}
+{% endfor %}
+{% endif %}
+{% endif %}

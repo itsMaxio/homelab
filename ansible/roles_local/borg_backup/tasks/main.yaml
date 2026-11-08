@@ -1,0 +1,24 @@
+- name: "DEBUG : Host connection info"
+  ansible.builtin.debug:
+    msg:
+      - "inventory_hostname: {{ inventory_hostname }}"
+      - "ansible_host: {{ ansible_host }}"
+      - "ansible_user: {{ ansible_user }}"
+  tags: [never, debug]
+
+- name: Packages task list include
+  ansible.builtin.include_tasks: packages.yaml
+  tags: [borg_backup, packages, debug]
+
+- name: Healthchecks task list include
+  ansible.builtin.include_tasks: healthchecks.yaml
+  when: borg_backup_healthchecks_enabled | bool
+  tags: [borg_backup, healthchecks, borgmatic, debug]
+
+- name: Borgmatic task list include
+  ansible.builtin.include_tasks: borgmatic.yaml
+  tags: [borg_backup, borgmatic, debug]
+
+- name: Ssh client task list include
+  ansible.builtin.include_tasks: ssh_client.yaml
+  tags: [borg_backup, ssh_client, debug]

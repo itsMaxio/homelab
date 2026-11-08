@@ -1,0 +1,70 @@
+- name: "DEBUG : Borgmatic variables"
+  ansible.builtin.debug:
+    msg:
+      - "install_method: {{ borg_backup_install_method }}"
+      - "install_venv_path: {{ borg_backup_install_venv_path }}"
+      - "install_borg_version: {{ borg_backup_install_borg_version }}"
+      - "install_borgmatic_version: {{ borg_backup_install_borgmatic_version }}"
+      - "configuration_name: {{ borg_backup_configuration_name }}"
+      - "nas_ssh_alias: {{ borg_backup_nas_ssh_alias }}"
+      - "source_directories: {{ borg_backup_source_directories }}"
+      - "compression: {{ borg_backup_compression }}"
+      - "encryption_passphrase_defined: {{ borg_backup_encryption_passphrase is defined and (borg_backup_encryption_passphrase | length > 0) }}"
+      - "retention_policy: {{ borg_backup_retention_policy }}"
+      - "consistency_checks: {{ borg_backup_consistency_checks }}"
+      - "before_backup_commands: {{ borg_backup_before_backup_commands }}"
+      - "after_backup_commands: {{ borg_backup_after_backup_commands }}"
+      - "on_error_commands: {{ borg_backup_on_error_commands }}"
+      - "cron_hour: {{ borg_backup_cron_hour }}"
+      - "cron_minute: {{ borg_backup_cron_minute }}"
+  tags: [never, debug]
+
+- name: Build Borgmatic extra configuration
+  ansible.builtin.set_fact:
+    _borg_backup_extra: "{{ lookup('ansible.builtin.template', 'borgmatic-extra.yaml.j2') | from_yaml }}"
+  tags: [borg_backup, borgmatic]
+
+- name: Run external Borgbackup role
+  ansible.builtin.include_role:
+    name: borgbase.ansible_role_borgbackup
+  vars:
+    borgbackup_install:
+      method: "{{ borg_backup_install_method }}"
+      venv_path: "{{ borg_backup_install_venv_path }}"
+      borg_version: "{{ borg_backup_install_borg_version }}"
+      borgmatic_version: "{{ borg_backup_install_borgmatic_version }}"
+
+    borgbackup_ssh:
+      create: true
+      key_path: "{{ borg_backup_ssh_key_path }}"
+      command: "{{ borg_backup_ssh_command }}"
+
+    borgbackup_timer:
+      type: "cron"
+      hour: "{{ borg_backup_cron_hour }}"
+      minute: "{{ borg_backup_cron_minute }}"
+
+    borgbackup_config:
+      name: "{{ borg_backup_configuration_name }}"
+      relocated_repo_access_is_ok: true
+      repositories:
+        - path: "ssh://{{ borg_backup_nas_ssh_alias }}/./repo"
+          label: "{{ borg_backup_nas_ssh_alias }}"
+      encryption_passphrase: "{{ borg_backup_encryption_passphrase }}"
+      source_directories: "{{ borg_backup_source_directories }}"
+      one_file_system: "{{ borg_backup_one_file_system }}"
+      exclude_caches: "{{ borg_backup_exclude_caches }}"
+      compression: "{{ borg_backup_compression }}"
+      lock_wait: "{{ borg_backup_lock_wait_time }}"
+      store_atime: "{{ borg_backup_store_access_time }}"
+      store_ctime: "{{ borg_backup_store_change_time }}"
+      retention: "{{ borg_backup_retention_policy }}"
+      checks: "{{ borg_backup_consistency_checks }}"
+      extra: "{{ _borg_backup_extra }}"
+  tags: [borg_backup, borgmatic]
+
+- name: Validate generated Borgmatic configuration
+  ansible.builtin.command:
+    cmd: "borgmatic config validate"
+  changed_when: false
+  tags: [borg_backup, borgmatic]

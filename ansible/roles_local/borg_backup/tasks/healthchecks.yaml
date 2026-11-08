@@ -1,0 +1,47 @@
+- name: "DEBUG : Healthchecks variables"
+  ansible.builtin.debug:
+    msg:
+      - "healthchecks_enabled: {{ borg_backup_healthchecks_enabled }}"
+      - "healthchecks_url: {{ borg_backup_healthchecks_url }}"
+      - "healthchecks_api_key_defined: {{ borg_backup_healthchecks_api_key is defined and (borg_backup_healthchecks_api_key | length > 0) }}"
+      - "check_name: {{ borg_backup_healthchecks_check_name }}"
+      - "check_slug: {{ borg_backup_healthchecks_check_slug }}"
+      - "check_tags: {{ borg_backup_healthchecks_check_tags }}"
+      - "description: {{ borg_backup_healthchecks_description }}"
+      - "schedule: {{ borg_backup_cron_minute }} {{ borg_backup_cron_hour }} * * *"
+      - "grace_time: {{ borg_backup_healthchecks_grace_time }}"
+      - "timezone: {{ borg_backup_healthchecks_timezone }}"
+      - "send_logs: {{ borg_backup_healthchecks_send_logs }}"
+  tags: [never, debug]
+
+- name: Create or update check in Healthchecks
+  ansible.builtin.uri:
+    url: "{{ borg_backup_healthchecks_url }}/api/v3/checks/"
+    method: "POST"
+    return_content: true
+    headers:
+      X-Api-Key: "{{ borg_backup_healthchecks_api_key }}"
+    body_format: "json"
+    body:
+      name: "{{ borg_backup_healthchecks_check_name }}"
+      slug: "{{ borg_backup_healthchecks_check_slug }}"
+      tags: "{{ borg_backup_healthchecks_check_tags }}"
+      desc: "{{ borg_backup_healthchecks_description }}"
+      schedule: "{{ borg_backup_cron_minute }} {{ borg_backup_cron_hour }} * * *"
+      grace: "{{ borg_backup_healthchecks_grace_time }}"
+      tz: "{{ borg_backup_healthchecks_timezone }}"
+      channels: "*"
+      unique:
+        - "slug"
+    status_code:
+      - 200
+      - 201
+  register: _borg_backup_healthchecks_response
+  delegate_to: localhost
+  become: false
+  tags: [borg_backup, healthchecks, borgmatic]
+
+- name: Save Healthchecks ping URL
+  ansible.builtin.set_fact:
+    _borg_backup_healthchecks_ping_url: "{{ _borg_backup_healthchecks_response.json.ping_url }}"
+  tags: [borg_backup, healthchecks, borgmatic]

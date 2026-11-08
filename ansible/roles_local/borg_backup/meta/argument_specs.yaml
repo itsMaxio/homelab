@@ -1,0 +1,135 @@
+argument_specs:
+  main:
+    short_description: Configures automated Borg backups with Borgmatic and Healthchecks
+    options:
+      borg_backup_install_method:
+        type: "str"
+        default: "pip"
+      borg_backup_install_venv_path:
+        type: "str"
+        default: "/opt/borgmatic"
+      borg_backup_install_borg_version:
+        type: "str"
+        default: ">=1.4,<1.5"
+      borg_backup_install_borgmatic_version:
+        type: "str"
+        default: ">=2.0.0,<3"
+      borg_backup_ssh_user:
+        type: "str"
+        default: "root"
+      borg_backup_ssh_key_path:
+        type: "str"
+        default: "/root/.ssh/id_ed25519_borg"
+      borg_backup_ssh_command:
+        type: "str"
+        default: "ssh"
+      borg_backup_nas_hostname:
+        type: "str"
+        required: true
+      borg_backup_nas_ssh_port:
+        type: "int"
+        default: 22
+      borg_backup_nas_ssh_alias:
+        type: "str"
+        default: "nas-borg"
+      borg_backup_nas_check_connectivity:
+        type: "bool"
+        default: true
+      borg_backup_nas_user:
+        type: "str"
+      borg_backup_nas_base_directory:
+        type: "str"
+        required: true
+      borg_backup_nas_repository_directory:
+        type: "str"
+      borg_backup_configuration_name:
+        type: "str"
+        default: "config.yaml"
+      borg_backup_source_directories:
+        type: "list"
+        elements: "str"
+        required: true
+      borg_backup_encryption_passphrase:
+        type: "str"
+        required: true
+      borg_backup_compression:
+        type: "str"
+        default: "auto,zstd"
+      borg_backup_lock_wait_time:
+        type: "int"
+        default: 30
+      borg_backup_one_file_system:
+        type: "bool"
+        default: true
+      borg_backup_exclude_caches:
+        type: "bool"
+        default: true
+      borg_backup_store_access_time:
+        type: "bool"
+        default: false
+      borg_backup_store_change_time:
+        type: "bool"
+        default: true
+      borg_backup_archive_name_format:
+        type: "str"
+        default: "{hostname}-{now:%Y-%m-%dT%H:%M:%S.%f}"
+      borg_backup_numeric_ids:
+        type: "bool"
+        default: true
+      borg_backup_verbosity:
+        type: "int"
+        default: 1
+      borg_backup_syslog_verbosity:
+        type: "int"
+        default: 1
+      borg_backup_retention_policy:
+        type: "dict"
+        required: true
+      borg_backup_consistency_checks:
+        type: "list"
+        elements: "dict"
+        required: true
+      borg_backup_before_backup_commands:
+        type: "list"
+        elements: "str"
+        default: []
+      borg_backup_after_backup_commands:
+        type: "list"
+        elements: "str"
+        default: []
+      borg_backup_on_error_commands:
+        type: "list"
+        elements: "str"
+        default: []
+      borg_backup_cron_hour:
+        type: "str"
+        default: "2"
+      borg_backup_cron_minute:
+        type: "str"
+        default: "0"
+      borg_backup_healthchecks_enabled:
+        type: "bool"
+        default: true
+      borg_backup_healthchecks_url:
+        type: "str"
+        required: false
+      borg_backup_healthchecks_api_key:
+        type: "str"
+        required: false
+      borg_backup_healthchecks_check_name:
+        type: "str"
+      borg_backup_healthchecks_check_slug:
+        type: "str"
+      borg_backup_healthchecks_check_tags:
+        type: "str"
+      borg_backup_healthchecks_description:
+        type: "str"
+      borg_backup_healthchecks_timezone:
+        type: "str"
+        default: "Europe/Warsaw"
+      borg_backup_healthchecks_grace_time:
+        type: "int"
+        default: 3600
+      borg_backup_healthchecks_send_logs:
+        type: "bool"
+        default: true
