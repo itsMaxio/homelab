@@ -1,0 +1,47 @@
+---
+- name: Test static DNS records in Technitium
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    technitium_dns_api_url: "https://10.10.20.53:443"
+    technitium_dns_api_token: "d2691d59d40d5a2e68efc5123084149a66aba0cbe36f4376351094f3876197c7"
+    technitium_dns_zone_name: "infra.maxio.me"
+    technitium_dns_state: "overridden"
+    technitium_dns_validate_certificates: false
+
+  #   technitium_dns_records:
+  #     - name: "test1.infra.maxio.me"
+  #       type: "A"
+  #       value: "10.10.20.250"
+  #       ttl: 300
+  #       ptr: true
+
+  #     - name: "test2.infra.maxio.me"
+  #       type: "CNAME"
+  #       value: "test1.infra.maxio.me"
+  #       ttl: 300
+  #       ptr: false
+
+  # roles:
+  #   - role: technitium_dns
+  #     tags: [technitium_dns]
+
+  tasks:
+    - name: Debug
+      ansible.builtin.set_fact:
+        test: "{{ hostvars | netbox_to_dns(technitium_dns_zone_name, 'dns-managed') }}"
+
+    - name: Debug2
+      ansible.builtin.debug:
+        var: test
+
+    # - name: Debug2
+    #   ansible.builtin.debug:
+    #     var: hostvars['ap-01']
+
+    - name: Synchronize DNS records
+      ansible.builtin.include_role:
+        name: technitium_dns
+      vars:
+        technitium_dns_records: "{{ hostvars | netbox_to_dns(technitium_dns_zone_name, 'dns-managed') }}"
