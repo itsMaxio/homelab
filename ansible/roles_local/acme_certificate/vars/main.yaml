@@ -1,0 +1,7 @@
+---
+_acme_certificate_required_packages:
+  - "git"
+  - "curl"
+  - "cron"
+  - "openssl"
+  - "ca-certificates"

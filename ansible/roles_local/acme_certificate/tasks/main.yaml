@@ -1,0 +1,16 @@
+---
+- name: "DEBUG : Host connection info"
+  ansible.builtin.debug:
+    msg:
+      - "inventory_hostname: {{ inventory_hostname }}"
+      - "ansible_host: {{ ansible_host }}"
+      - "ansible_user: {{ ansible_user }}"
+  tags: [never, debug]
+
+- name: Install task list include
+  ansible.builtin.include_tasks: install.yaml
+  tags: [acme_certificate, install, debug]
+
+- name: Issue task list include
+  ansible.builtin.include_tasks: issue.yaml
+  tags: [acme_certificate, issue, debug]

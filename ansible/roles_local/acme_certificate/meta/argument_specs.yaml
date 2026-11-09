@@ -1,0 +1,53 @@
+argument_specs:
+  main:
+    short_description: Installs acme.sh and
+    options:
+      acme_certificate_repository_directory:
+        type: "str"
+        default: "/usr/local/src/acme.sh"
+      acme_certificate_repository_url:
+        type: "str"
+        default: "https://github.com/acmesh-official/acme.sh.git"
+      acme_certificate_repository_version:
+        type: "str"
+        default: "master"
+      acme_certificate_auto_upgrade:
+        type: "bool"
+        default: true
+      acme_certificate_home_directory:
+        type: "str"
+        default: "/root/.acme.sh"
+      acme_certificate_default_ca:
+        type: "str"
+        default: "letsencrypt"
+      acme_certificate_account_email:
+        type: "str"
+        required: true
+      acme_certificate_main_domain:
+        type: "str"
+        required: true
+      acme_certificate_additional_domains:
+        type: "list"
+        elements: "str"
+        default: []
+      acme_certificate_force_renew:
+        type: "bool"
+        default: false
+      acme_certificate_key_length:
+        type: "str"
+        default: "ec-256"
+      acme_certificate_dns_provider:
+        type: "str"
+        default: "dns_cf"
+      acme_certificate_dns_environment:
+        type: "dict"
+        required: true
+      acme_certificate_pkcs12_enable:
+        type: "bool"
+        default: false
+      acme_certificate_pkcs12_password:
+        type: "str"
+        required: false
+      acme_certificate_reload_command:
+        type: "str"
+        required: false

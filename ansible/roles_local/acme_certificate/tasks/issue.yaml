@@ -1,0 +1,89 @@
+---
+- name: "DEBUG : Issue variables"
+  ansible.builtin.debug:
+    msg:
+      - "main_domain: {{ acme_certificate_main_domain }}"
+      - "additional_domains: {{ acme_certificate_additional_domains }}"
+      - "force_renew: {{ acme_certificate_force_renew }}"
+      - "key_length: {{ acme_certificate_key_length }}"
+      - "dns_provider: {{ acme_certificate_dns_provider }}"
+      - "dns_environment_keys: {{ acme_certificate_dns_environment.keys() | list }}"
+      - "pkcs12_enable: {{ acme_certificate_pkcs12_enable }}"
+      - "pkcs12_password_defined: {{ acme_certificate_pkcs12_password is defined and (acme_certificate_pkcs12_password | length > 0) }}"
+      - "reload_command: {{ acme_certificate_reload_command | default(None) }}"
+  tags: [never, debug]
+
+- name: Determine certificate internal directory suffix and ECC flag
+  ansible.builtin.set_fact:
+    _acme_certificate_directory_suffix: "{{ '_ecc' if 'ec' in acme_certificate_key_length else '' }}"
+    _acme_certificate_ecc_flag: "{{ '--ecc' if 'ec' in acme_certificate_key_length else '' }}"
+  tags: [acme_certificate, issue]
+
+- name: Resolve internal acme.sh certificate storage directory
+  ansible.builtin.set_fact:
+    _acme_certificate_internal_directory: "{{ acme_certificate_home_directory }}/{{ acme_certificate_main_domain }}{{ _acme_certificate_directory_suffix }}"
+  tags: [acme_certificate, issue]
+
+- name: Check if certificate is already issued
+  ansible.builtin.stat:
+    path: "{{ _acme_certificate_internal_directory }}/{{ acme_certificate_main_domain }}.cer"
+  register: _acme_certificate_stat
+  tags: [acme_certificate, issue]
+
+- name: Determine if certificate should be issued or renewed
+  ansible.builtin.set_fact:
+    _acme_certificate_should_issue: "{{ not _acme_certificate_stat.stat.exists or (acme_certificate_force_renew | bool) }}"
+    _acme_certificate_force_flag: "{{ '--force' if (acme_certificate_force_renew | bool) else '' }}"
+  tags: [acme_certificate, issue]
+
+- name: Build domain arguments list
+  ansible.builtin.set_fact:
+    _acme_certificate_domain_args: >-
+      -d {{ acme_certificate_main_domain }}
+      {% for additional_domain in acme_certificate_additional_domains %}
+      -d {{ additional_domain }}
+      {% endfor %}
+  tags: [acme_certificate, issue]
+
+- name: Issue certificate via DNS API
+  ansible.builtin.command:
+    cmd: >
+      {{ acme_certificate_home_directory }}/acme.sh --issue
+      --dns {{ acme_certificate_dns_provider }}
+      {{ _acme_certificate_domain_args }}
+      --keylength {{ acme_certificate_key_length }}
+      {{ _acme_certificate_force_flag }}
+  environment: "{{ acme_certificate_dns_environment }}"
+  when: _acme_certificate_should_issue | bool
+  register: _acme_certificate_issue_result
+  changed_when: "'Cert success' in _acme_certificate_issue_result.stdout"
+  tags: [acme_certificate, issue]
+
+- name: Convert certificate to PKCS#12 (.pfx) format if enabled
+  ansible.builtin.command:
+    cmd: >
+      {{ acme_certificate_home_directory }}/acme.sh --to-pkcs12
+      -d {{ acme_certificate_main_domain }}
+      --password "{{ acme_certificate_pkcs12_password }}"
+      {{ _acme_certificate_ecc_flag }}
+  when:
+    - acme_certificate_pkcs12_enable | bool
+    - _acme_certificate_should_issue | bool
+  register: _acme_certificate_to_pkcs12_result
+  changed_when: "'Create ToPKCS12 cert success' in _acme_certificate_to_pkcs12_result.stdout"
+  no_log: true
+  tags: [acme_certificate, issue]
+
+- name: Register reload command hook via install-cert
+  ansible.builtin.command:
+    cmd: >
+      {{ acme_certificate_home_directory }}/acme.sh --install-cert
+      -d {{ acme_certificate_main_domain }}
+      {{ _acme_certificate_ecc_flag }}
+      --reloadcmd "{{ acme_certificate_reload_command }}"
+  when:
+    - acme_certificate_reload_command is defined
+    - acme_certificate_reload_command | length > 0
+    - _acme_certificate_should_issue | bool
+  changed_when: true
+  tags: [acme_certificate, issue]

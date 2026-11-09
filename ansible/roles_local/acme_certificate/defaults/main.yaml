@@ -1,0 +1,32 @@
+---
+# acme.sh installation and paths
+acme_certificate_repository_directory: "/usr/local/src/acme.sh"
+acme_certificate_repository_url: "https://github.com/acmesh-official/acme.sh.git"
+acme_certificate_repository_version: "master"
+acme_certificate_auto_upgrade: true
+acme_certificate_home_directory: "/root/.acme.sh"
+acme_certificate_default_ca: "letsencrypt"
+
+# Account registration
+# acme_certificate_account_email: "admin@example.com"
+
+# Domain specification
+# acme_certificate_main_domain: "vm-docker-01.example.com"
+acme_certificate_additional_domains: []
+acme_certificate_force_renew: false
+
+# Cryptography and DNS provider
+acme_certificate_key_length: "ec-256"
+acme_certificate_dns_provider: "dns_cf"
+
+# DNS provider API credentials
+# acme_certificate_dns_environment:
+#   CF_Token: "secret_token_here"
+#   CF_Account_ID: "optional_account_id_here"
+
+# PKCS#12 (.pfx) export toggle
+acme_certificate_pkcs12_enable: false
+# acme_certificate_pkcs12_password: "MandatoryIfPkcs12Enabled"
+
+# Optional hook command executed after successful issuance and renewals
+# acme_certificate_reload_command: "systemctl reload nginx"

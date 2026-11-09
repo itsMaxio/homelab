@@ -1,0 +1,68 @@
+---
+- name: "DEBUG : Install variables"
+  ansible.builtin.debug:
+    msg:
+      - "repository_directory: {{ acme_certificate_repository_directory }}"
+      - "repository_url: {{ acme_certificate_repository_url }}"
+      - "repository_version: {{ acme_certificate_repository_version }}"
+      - "home_directory: {{ acme_certificate_home_directory }}"
+      - "account_email: {{ acme_certificate_account_email }}"
+      - "default_ca: {{ acme_certificate_default_ca }}"
+      - "auto_upgrade: {{ acme_certificate_auto_upgrade }}"
+  tags: [never, debug]
+
+- name: Install required system packages
+  ansible.builtin.apt:
+    name: "{{ _acme_certificate_required_packages }}"
+    state: "present"
+    update_cache: true
+    cache_valid_time: 3600
+  tags: [acme_certificate, install]
+
+- name: Ensure cron service is running and enabled
+  ansible.builtin.service:
+    name: "cron"
+    state: "started"
+    enabled: true
+  tags: [acme_certificate, install]
+
+- name: Clone or pull acme.sh Git repository
+  ansible.builtin.git:
+    repo: "{{ acme_certificate_repository_url }}"
+    dest: "{{ acme_certificate_repository_directory }}"
+    version: "{{ acme_certificate_repository_version }}"
+    depth: 1
+  tags: [acme_certificate, install]
+
+- name: Check if acme.sh is already installed in home directory
+  ansible.builtin.stat:
+    path: "{{ acme_certificate_home_directory }}/acme.sh"
+  register: _acme_certificate_binary_stat
+  tags: [acme_certificate, install]
+
+- name: Run acme.sh installation script
+  ansible.builtin.command:
+    cmd: >
+      ./acme.sh --install
+      --accountemail "{{ acme_certificate_account_email }}"
+      --home "{{ acme_certificate_home_directory }}"
+    chdir: "{{ acme_certificate_repository_directory }}"
+    creates: "{{ acme_certificate_home_directory }}/acme.sh"
+  when: not _acme_certificate_binary_stat.stat.exists
+  tags: [acme_certificate, install]
+
+- name: Configure acme.sh auto-upgrade setting
+  ansible.builtin.lineinfile:
+    path: "{{ acme_certificate_home_directory }}/account.conf"
+    regexp: "^AUTO_UPGRADE="
+    line: "AUTO_UPGRADE='{{ '1' if acme_certificate_auto_upgrade | bool else '0' }}'"
+    create: true
+    mode: "0600"
+  tags: [acme_certificate, install]
+
+- name: Set default certificate authority
+  ansible.builtin.command:
+    cmd: "{{ acme_certificate_home_directory }}/acme.sh --set-default-ca --server {{ acme_certificate_default_ca }}"
+  when: not _acme_certificate_binary_stat.stat.exists
+  changed_when: true
+  tags: [acme_certificate, install]
