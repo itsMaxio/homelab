@@ -1,0 +1,37 @@
+---
+- name: Configure DNS server nodes
+  hosts: dns-server:&ansible-managed
+  gather_facts: true
+  become: true
+
+  pre_tasks:
+    - name: Set system timezone
+      community.general.timezone:
+        name: "{{ system_timezone }}"
+      tags: [timezone]
+
+    - name: Ensure certificate directory exists
+      ansible.builtin.file:
+        path: "{{ config_context[0].acme.certificate_directory }}"
+        state: "directory"
+        owner: "root"
+        group: "root"
+        mode: "0700"
+      tags: [acme_certificate, issue]
+
+  roles:
+    - role: geerlingguy.docker
+      tags: [docker]
+
+    - role: acme_certificate
+      throttle: 1
+      tags: [acme_certificate]
+
+    - role: borg_backup
+      tags: [borg_backup, backup]
+
+    # - role: technitium_dns
+    #   delegate_to: localhost
+    #   become: false
+    #   run_once: true
+    #   tags: [technitium_dns, dns_records]
