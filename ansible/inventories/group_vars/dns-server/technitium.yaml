@@ -1,0 +1,6 @@
+---
+technitium_dns_api_url: "https://{{ hostvars[groups['dns-server'] | sort | first].ansible_host }}"
+technitium_dns_api_token: "{{ lookup('community.general.onepassword', 'technitium', field='api_token', vault='Ansible') }}"
+technitium_dns_zone_name: "{{ ctx.system.domain_name }}"
+technitium_dns_state: "overridden"
+technitium_dns_records: "{{ hostvars | netbox_to_dns(ctx.system.domain_name, 'dns-managed') }}"

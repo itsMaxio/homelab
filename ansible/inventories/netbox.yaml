@@ -15,6 +15,10 @@ group_by:
   - platforms
   - tags
 
+groups:
+  debian: "platforms is defined and (platforms | select('match', '^debian-') | list | length > 0)"
+  linux: "platforms is defined and (platforms | select('match', '^(debian|ubuntu)-') | list | length > 0)"
+
 query_filters:
   - has_primary_ip: true
   - status: active

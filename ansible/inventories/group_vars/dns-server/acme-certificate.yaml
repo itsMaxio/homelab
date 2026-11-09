@@ -1,0 +1,20 @@
+---
+acme_certificate_account_email: "{{ ctx.acme.account_email }}"
+acme_certificate_main_domain: "{{ inventory_hostname }}.{{ ctx.system.domain_name }}"
+acme_certificate_additional_domains: "{{ ctx.acme.additional_domains | default([]) }}"
+acme_certificate_key_length: "{{ ctx.acme.key_length }}"
+acme_certificate_dns_provider: "{{ ctx.acme.dns_provider }}"
+
+acme_certificate_dns_environment:
+  CF_Token: "{{ lookup('community.general.onepassword', 'cloudflare_api', field='dns_cf_token', vault='Ansible') }}"
+  CF_Account_ID: "{{ lookup('community.general.onepassword', 'cloudflare_api', field='dns_cf_account_id', vault='Ansible') }}"
+
+acme_certificate_pkcs12_enable: true
+acme_certificate_pkcs12_password: "{{ lookup('community.general.onepassword', 'cloudflare_api', field='dns_pkcs12_password', vault='Ansible') }}"
+
+acme_certificate_target_directory: "{{ ctx.acme.certificate_directory }}"
+
+acme_certificate_reload_command: >-
+  cp {{ acme_certificate_home_directory }}/{{ acme_certificate_main_domain }}{{ '_ecc' if 'ec' in acme_certificate_key_length else '' }}/{{ acme_certificate_main_domain }}.pfx
+  {{ acme_certificate_target_directory }}/cert.pfx &&
+  chmod 600 {{ acme_certificate_target_directory }}/cert.pfx

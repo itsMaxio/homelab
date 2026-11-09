@@ -1,0 +1,21 @@
+---
+borg_backup_ssh_key_path: "{{ ctx.borg.ssh_key_path }}"
+borg_backup_nas_hostname: "{{ ctx.borg.nas.hostname }}"
+borg_backup_nas_ssh_alias: "{{ ctx.borg.nas.ssh_alias }}"
+borg_backup_nas_base_directory: "{{ ctx.borg.nas.base_directory }}"
+
+borg_backup_source_directories: "{{ ctx.borg.source_directories }}"
+borg_backup_compression: "{{ ctx.borg.compression }}"
+borg_backup_encryption_passphrase: "{{ lookup('community.general.onepassword', 'borgmatic', field=inventory_hostname, vault='Ansible') }}"
+
+borg_backup_before_backup_commands: "{{ ctx.borg.before_backup_commands | default([]) }}"
+borg_backup_after_backup_commands: "{{ ctx.borg.after_backup_commands | default([]) }}"
+borg_backup_on_error_commands: "{{ ctx.borg.on_error_commands | default([]) }}"
+
+borg_backup_cron_hour: "{{ ctx.borg.cron.hour }}"
+borg_backup_cron_minute: "{{ ctx.borg.cron.minute }}"
+
+borg_backup_healthchecks_url: "{{ ctx.borg.healthchecks.url }}"
+borg_backup_healthchecks_timezone: "{{ ctx.borg.healthchecks.timezone }}"
+borg_backup_healthchecks_grace_time: "{{ ctx.borg.healthchecks.grace_time }}"
+borg_backup_healthchecks_api_key: "{{ lookup('community.general.onepassword', 'healthchecks', field='api_key', vault='Ansible') }}"
