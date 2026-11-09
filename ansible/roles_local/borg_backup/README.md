@@ -1,4 +1,4 @@
-# borg_backup
+# Ansible Role: borg_backup
 
 Configures automated Borg backups using Borgmatic, registers monitoring checks in Healthchecks, and sets up restricted SSH client connectivity to a remote NAS repository
 
@@ -32,6 +32,7 @@ Output variables:
 ## Example Playbook
 
 ```yaml
+---
 - hosts: compute
   gather_facts: true
   become: true
