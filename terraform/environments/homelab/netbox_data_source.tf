@@ -43,7 +43,9 @@ locals {
 
   ipv4_by_interface_id = {
     for ip in data.netbox_ip_addresses.all_ip_addresses.ip_addresses :
-    ip.virtual_machine_interface_id => ip...
+    ip.virtual_machine_interface_id => {
+      ip_address = ip.ip_address
+    }...
     if ip.virtual_machine_interface_id != null && ip.family == 4
   }
 
@@ -52,7 +54,7 @@ locals {
     vm.name => merge(
       vm,
       {
-        config_context = jsondecode(coalesce(vm.config_context, "{}"))
+        config_context = jsondecode(vm.config_context)
 
         boot_disk = one([
           for virtual_disk in data.netbox_virtual_disks.all_virtual_disks.virtual_disks :
@@ -72,6 +74,8 @@ locals {
             ] : {
             name        = interface.name
             bridge      = interface.custom_fields.proxmox_interface_bridge
+            model       = jsondecode(interface.custom_fields.proxmox_interface_model).value
+            firewall    = tobool(interface.custom_fields.proxmox_interface_firewall)
             vlan_id     = interface.untagged_vlan_id != null ? local.vlans_by_id[interface.untagged_vlan_id] : null
             mtu         = interface.mtu
             queues      = tonumber(interface.custom_fields.proxmox_interface_queues)
@@ -91,17 +95,25 @@ locals {
   vms = {
     for name, vm in local.vms_raw :
     name => {
-      name            = name
-      vm_id           = tonumber(vm.custom_fields.proxmox_vm_id)
-      description     = vm.description
-      tags            = vm.tags
-      node_name       = local.devices_by_id[vm.device_id].name
-      platform        = local.platforms_by_id[vm.platform_id].slug
-      protection      = contains(try(vm.tags, []), var.protected_vm_tag)
+      name               = name
+      vm_id              = tonumber(vm.custom_fields.proxmox_vm_id)
+      description        = vm.description
+      tags               = vm.tags
+      node_name          = local.devices_by_id[vm.device_id].name
+      platform           = local.platforms_by_id[vm.platform_id].slug
+      protection         = contains(vm.tags, var.protected_vm_tag)
+      started            = vm.status == "active"
+      on_boot            = vm.start_on_boot == "on"
+      qemu_agent_enabled = tobool(vm.custom_fields.proxmox_qemu_agent)
+      operating_system   = jsondecode(vm.custom_fields.proxmox_operating_system).value
+
       cpu_cores       = tonumber(vm.custom_fields.proxmox_cores)
+      cpu_sockets     = tonumber(vm.custom_fields.proxmox_sockets)
       cpu_type        = jsondecode(vm.custom_fields.proxmox_cpu_type).value
       scsi_controller = jsondecode(vm.custom_fields.proxmox_scsi_controller).value
-      memory          = vm.memory_mb
+
+      memory            = vm.memory_mb
+      memory_ballooning = tobool(vm.custom_fields.proxmox_ballooning_device)
 
       boot_disk_datastore_id  = vm.boot_disk.custom_fields.proxmox_datastore_id
       boot_disk_interface     = vm.boot_disk.name
@@ -110,14 +122,17 @@ locals {
       boot_disk_discard       = tobool(vm.boot_disk.custom_fields.proxmox_discard)
       boot_disk_io_thread     = tobool(vm.boot_disk.custom_fields.proxmox_io_thread)
       boot_disk_ssd_emulation = tobool(vm.boot_disk.custom_fields.proxmox_ssd_emulation)
+      boot_disk_backup        = tobool(vm.boot_disk.custom_fields.proxmox_backup)
 
       cloud_init_datastore_id = vm.cloud_init_disk.custom_fields.proxmox_datastore_id
       cloud_init_interface    = vm.cloud_init_disk.name
       cloud_init_auto_upgrade = tobool(vm.custom_fields.proxmox_cloud_init_auto_upgrade)
+      snippets_datastore_id   = vm.custom_fields.proxmox_snippets_datastore_id
 
       network_interfaces = vm.network_interfaces
       dns_servers        = vm.config_context.dns.nameservers
-      search_domain      = vm.config_context.dns.search_domain
+      domain_name        = vm.config_context.system.domain_name
+      search_domains     = vm.config_context.dns.search_domains
 
       users = vm.config_context.ssh_authorized_keys
     }

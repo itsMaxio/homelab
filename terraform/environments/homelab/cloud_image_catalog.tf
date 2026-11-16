@@ -18,7 +18,7 @@ locals {
     }
     "debian-13" = {
       url       = "https://cloud.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2"
-      file_name = "debian-12-cloudimg.img"
+      file_name = "debian-13-cloudimg.img"
     }
   }
 }

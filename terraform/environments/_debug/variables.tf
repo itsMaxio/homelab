@@ -12,3 +12,8 @@ variable "vm_tag" {
   type    = string
   default = "terraform-managed"
 }
+
+variable "protected_vm_tag" {
+  type    = string
+  default = "terraform-protected"
+}

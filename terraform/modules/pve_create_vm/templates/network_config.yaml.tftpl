@@ -12,15 +12,19 @@ ethernets:
       - to: default
         via: "${interface.gateway}"
 %{ endif ~}
-%{ if interface.name == dns_interface_name && length(dns_servers) > 0 ~}
+%{ if interface.name == dns_interface_name && (length(dns_servers) > 0 || length(search_domains) > 0) ~}
     nameservers:
+%{ if length(dns_servers) > 0 ~}
       addresses:
 %{ for dns in dns_servers ~}
         - "${dns}"
 %{ endfor ~}
-%{ if search_domain != null && search_domain != "" ~}
+%{ endif ~}
+%{ if length(search_domains) > 0 ~}
       search:
+%{ for search_domain in search_domains ~}
         - "${search_domain}"
+%{ endfor ~}
 %{ endif ~}
 %{ endif ~}
 %{ if interface.mtu != null ~}

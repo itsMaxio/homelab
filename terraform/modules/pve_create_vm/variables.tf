@@ -31,6 +31,24 @@ variable "protection" {
   description = "Enable Proxmox VM protection flag to prevent accidental removal"
 }
 
+variable "on_boot" {
+  type        = bool
+  default     = false
+  description = "Specifies whether a VM will be started during system boot"
+}
+
+variable "started" {
+  type        = bool
+  default     = true
+  description = "Whether to start the virtual machine"
+}
+
+variable "qemu_agent_enabled" {
+  type        = bool
+  default     = true
+  description = "Enable QEMU Guest Agent communication in Proxmox"
+}
+
 variable "operating_system" {
   type        = string
   default     = "l26"
@@ -45,7 +63,13 @@ variable "scsi_controller" {
 
 variable "cpu_cores" {
   type        = number
-  description = "Number of CPU cores allocated to the VM"
+  description = "Number of CPU cores per socket allocated to the VM"
+}
+
+variable "cpu_sockets" {
+  type        = number
+  default     = 1
+  description = "Number of CPU sockets allocated to the VM"
 }
 
 variable "cpu_type" {
@@ -57,6 +81,12 @@ variable "cpu_type" {
 variable "memory" {
   type        = number
   description = "Amount of RAM memory in megabytes"
+}
+
+variable "memory_ballooning" {
+  type        = bool
+  default     = false
+  description = "Enable memory ballooning device in Proxmox"
 }
 
 variable "boot_disk_datastore_id" {
@@ -104,6 +134,12 @@ variable "boot_disk_ssd_emulation" {
   description = "Enable SSD emulation for the boot disk"
 }
 
+variable "boot_disk_backup" {
+  type        = bool
+  default     = true
+  description = "Include boot disk in Proxmox backup jobs"
+}
+
 variable "cloud_init_datastore_id" {
   type        = string
   default     = ""
@@ -132,6 +168,8 @@ variable "network_interfaces" {
   type = list(object({
     name        = string
     bridge      = string
+    model       = optional(string)
+    firewall    = optional(bool)
     vlan_id     = optional(number)
     mtu         = optional(number)
     queues      = optional(number)
@@ -150,10 +188,16 @@ variable "dns_servers" {
   description = "List of DNS nameservers for the VM"
 }
 
-variable "search_domain" {
+variable "domain_name" {
   type        = string
   default     = null
-  description = "Search search_domain for DNS resolution"
+  description = "Primary domain name of the VM used to construct its FQDN"
+}
+
+variable "search_domains" {
+  type        = list(string)
+  default     = []
+  description = "List of DNS search domains configured on the primary network interface"
 }
 
 variable "users" {

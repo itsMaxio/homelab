@@ -1,9 +1,10 @@
 #cloud-config
 hostname: ${hostname}
-%{ if search_domain != null && search_domain != "" ~}
-fqdn: ${hostname}.${search_domain}
+%{ if domain_name != null && domain_name != "" ~}
+fqdn: ${hostname}.${domain_name}
 %{ endif ~}
 manage_etc_hosts: true
+%{ if length(users) > 0 ~}
 
 users:
 %{ for username, keys in users ~}
@@ -12,8 +13,11 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
     lock_passwd: true
+%{ if length(keys) > 0 ~}
     ssh_authorized_keys:
 %{ for key in keys ~}
       - "${key}"
 %{ endfor ~}
+%{ endif ~}
 %{ endfor ~}
+%{ endif ~}
