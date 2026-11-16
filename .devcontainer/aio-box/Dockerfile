@@ -8,6 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # install all necessary apt packages
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        ca-certificates \
         gnupg \
         curl \
         wget \
@@ -17,6 +18,7 @@ RUN apt-get update && \
         openssh-client \
         sshpass \
         bash-completion \
+        shellcheck \
         jq \
         nano \
         vim \
@@ -25,37 +27,28 @@ RUN apt-get update && \
         dnsutils && \
     rm -rf /var/lib/apt/lists/*
 
-# add terraform
-# RUN wget -O - https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
-#     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list && \
-#     apt-get update && \
-#     apt-get install -y --no-install-recommends \
-#         terraform && \
-#     rm -rf /var/lib/apt/lists/*
+# add opentofu
+RUN curl --proto '=https' --tlsv1.2 -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.sh && \
+    chmod +x install-opentofu.sh && \
+    ./install-opentofu.sh --install-method deb && \
+    rm -f install-opentofu.sh && \
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /root/.terraform.d/plugin-cache && \
+    tofu --version
 
 # add 1password cli
 RUN curl -sS https://downloads.1password.com/linux/keys/1password.asc | \
-    sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" | \
-    sudo tee /etc/apt/sources.list.d/1password.list && \
-    sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/ && \
-    curl -sS https://downloads.1password.com/linux/debian/debsig/1password.pol | \
-    sudo tee /etc/debsig/policies/AC2D62742012EA22/1password.pol && \
-    sudo mkdir -p /usr/share/debsig/keyrings/AC2D62742012EA22 && \
+    gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" > /etc/apt/sources.list.d/1password.list && \
+    mkdir -p /etc/debsig/policies/AC2D62742012EA22/ && \
+    curl -sS https://downloads.1password.com/linux/debian/debsig/1password.pol > /etc/debsig/policies/AC2D62742012EA22/1password.pol && \
+    mkdir -p /usr/share/debsig/keyrings/AC2D62742012EA22 && \
     curl -sS https://downloads.1password.com/linux/keys/1password.asc | \
-    sudo gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg && \
-    sudo apt-get update && sudo apt-get install -y --no-install-recommends 1password-cli && \
+    gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends 1password-cli && \
     rm -rf /var/lib/apt/lists/* && \
     op --version
-
-# # add 1password cli beta
-# RUN wget "https://cache.agilebits.com/dist/1P/op2/pkg/v2.39.1-beta.01/op_linux_amd64_v2.39.1-beta.01.zip" -O op.zip && \
-#     unzip -d op op.zip && \
-#     sudo mv op/op /usr/local/bin/ && \
-#     rm -r op.zip op && \
-#     sudo groupadd -f onepassword-cli && \
-#     sudo chgrp onepassword-cli /usr/local/bin/op && \
-#     sudo chmod g+s /usr/local/bin/op
 
 # install all necessary pip packages
 RUN python3 -m venv ${VIRTUAL_ENV} && \
@@ -63,16 +56,21 @@ RUN python3 -m venv ${VIRTUAL_ENV} && \
         pip \
         argcomplete \
         pytz \
+        packaging \
+        jmespath \
+        netaddr \
+        pynetbox \
         'paramiko<3.0' \
         ansible-pylibssh \
         ansible-dev-tools \
+        proxmoxer \
         docker \
         molecule-plugins[docker]
 
-# autocompletition
+# autocompletion
 RUN mkdir -p /etc/bash_completion.d && \
     # docker
-    curl -L https://raw.githubusercontent.com/docker/cli/master/contrib/completion/bash/docker -o /etc/bash_completion.d/docker && \
+    curl -fsSL https://raw.githubusercontent.com/docker/cli/master/contrib/completion/bash/docker -o /etc/bash_completion.d/docker && \
     # ansible
     register-python-argcomplete ansible > /etc/bash_completion.d/ansible && \
     register-python-argcomplete ansible-config > /etc/bash_completion.d/ansible-config && \
@@ -85,12 +83,12 @@ RUN mkdir -p /etc/bash_completion.d && \
     register-python-argcomplete ansible-vault > /etc/bash_completion.d/ansible-vault && \
     # molecule
     _MOLECULE_COMPLETE=bash_source molecule > /etc/bash_completion.d/molecule && \
-    # terraform
-    # terraform -install-autocomplete && \
+    # opentofu
+    # echo "complete -o nospace -C /usr/bin/tofu tofu" > /etc/bash_completion.d/tofu && \
+    tofu -install-autocomplete && \
     # 1password
     op completion bash > /etc/bash_completion.d/1password
 
 # .bashrc
 RUN echo "source /usr/share/bash-completion/bash_completion" >> /root/.bashrc && \
-    echo "cd /workspace" >> /root/.bashrc && \
     echo "export PS1='\u@\h:\w\$ '" >> /root/.bashrc
