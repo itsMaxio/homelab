@@ -9,7 +9,7 @@ acme_certificate_dns_environment:
   CF_Token: "{{ lookup('community.general.onepassword', 'cloudflare_api', field='dns_cf_token', vault='Ansible') }}"
   CF_Account_ID: "{{ lookup('community.general.onepassword', 'cloudflare_api', field='dns_cf_account_id', vault='Ansible') }}"
 
-acme_certificate_pkcs12_enable: true
+acme_certificate_pkcs12_enabled: true
 acme_certificate_pkcs12_password: "{{ lookup('community.general.onepassword', 'cloudflare_api', field='dns_pkcs12_password', vault='Ansible') }}"
 
 acme_certificate_target_directory: "{{ ctx.acme.certificate_directory }}"

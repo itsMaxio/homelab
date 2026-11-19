@@ -25,7 +25,7 @@ acme_certificate_dns_provider: "dns_cf"
 #   CF_Account_ID: "optional_account_id_here"
 
 # PKCS#12 (.pfx) export toggle
-acme_certificate_pkcs12_enable: false
+acme_certificate_pkcs12_enabled: false
 # acme_certificate_pkcs12_password: "MandatoryIfPkcs12Enabled"
 
 # Optional hook command executed after successful issuance and renewals

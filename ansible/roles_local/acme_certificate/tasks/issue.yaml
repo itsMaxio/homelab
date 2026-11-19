@@ -8,7 +8,7 @@
       - "key_length: {{ acme_certificate_key_length }}"
       - "dns_provider: {{ acme_certificate_dns_provider }}"
       - "dns_environment_keys: {{ acme_certificate_dns_environment.keys() | list }}"
-      - "pkcs12_enable: {{ acme_certificate_pkcs12_enable }}"
+      - "pkcs12_enable: {{ acme_certificate_pkcs12_enabled }}"
       - "pkcs12_password_defined: {{ acme_certificate_pkcs12_password is defined and (acme_certificate_pkcs12_password | length > 0) }}"
       - "reload_command: {{ acme_certificate_reload_command | default(None) }}"
   tags: [never, debug]
@@ -67,7 +67,7 @@
       --password "{{ acme_certificate_pkcs12_password }}"
       {{ _acme_certificate_ecc_flag }}
   when:
-    - acme_certificate_pkcs12_enable | bool
+    - acme_certificate_pkcs12_enabled | bool
     - _acme_certificate_should_issue | bool
   register: _acme_certificate_to_pkcs12_result
   changed_when: "'Create ToPKCS12 cert success' in _acme_certificate_to_pkcs12_result.stdout"

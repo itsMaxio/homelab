@@ -42,7 +42,7 @@ argument_specs:
       acme_certificate_dns_environment:
         type: "dict"
         required: true
-      acme_certificate_pkcs12_enable:
+      acme_certificate_pkcs12_enabled:
         type: "bool"
         default: false
       acme_certificate_pkcs12_password:

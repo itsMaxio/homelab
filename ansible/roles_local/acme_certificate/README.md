@@ -41,7 +41,7 @@ Installs `acme.sh` from Git and issues or renews TLS certificates via DNS-01 API
         acme_certificate_dns_environment:
           CF_Token: "your_cloudflare_api_token"
           CF_Account_ID: "your_cloudflare_account_id"
-        acme_certificate_pkcs12_enable: true
+        acme_certificate_pkcs12_enabled: true
         acme_certificate_pkcs12_password: "your_pkcs12_password"
       tags: [acme_certificate]
 ```
