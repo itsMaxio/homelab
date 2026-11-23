@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/base:debian-12
+FROM mcr.microsoft.com/devcontainers/base:debian-13
 
 ENV DEBIAN_FRONTEND=noninteractive \
     VIRTUAL_ENV=/opt/venv \
