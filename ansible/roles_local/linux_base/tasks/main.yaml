@@ -1,0 +1,16 @@
+---
+- name: QEMU Guest Agent task list include
+  ansible.builtin.include_tasks: "qemu_guest_agent.yaml"
+  tags: [linux_base, qemu_guest_agent, debug]
+
+- name: Timezone task list include
+  ansible.builtin.include_tasks: "timezone.yaml"
+  tags: [linux_base, timezone, debug]
+
+- name: Swap task list include
+  ansible.builtin.include_tasks: "swap.yaml"
+  tags: [linux_base, swap, zswap, debug]
+
+- name: Sysctl task list include
+  ansible.builtin.include_tasks: "sysctl.yaml"
+  tags: [linux_base, sysctl, debug]

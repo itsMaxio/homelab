@@ -1,0 +1,74 @@
+---
+argument_specs:
+  main:
+    short_description: "Configures baseline system settings on Linux hosts"
+    options:
+      linux_base_qemu_guest_agent_enabled:
+        type: "bool"
+        default: false
+      linux_base_qemu_guest_agent_state:
+        type: "str"
+        choices: ["present", "absent"]
+        default: "present"
+      linux_base_timezone_enabled:
+        type: "bool"
+        default: false
+      linux_base_timezone:
+        type: "str"
+      linux_base_swap_enabled:
+        type: "bool"
+        default: false
+      linux_base_swap_state:
+        type: "str"
+        choices: ["present", "absent"]
+        default: "present"
+      linux_base_swap_file_path:
+        type: "str"
+      linux_base_swap_file_size_mb:
+        type: "int"
+      linux_base_swap_swappiness:
+        type: "int"
+      linux_base_swap_sysctl_file:
+        type: "str"
+        default: "/etc/sysctl.d/60-swap.conf"
+      linux_base_zswap_enabled:
+        type: "bool"
+        default: false
+      linux_base_zswap_state:
+        type: "str"
+        choices: ["present", "absent"]
+        default: "present"
+      linux_base_zswap_compressor:
+        type: "str"
+        choices: ["zstd", "lz4", "lzo", "lzo-rle", "deflate"]
+      linux_base_zswap_zpool:
+        type: "str"
+        choices: ["zsmalloc", "zbud", "z3fold"]
+      linux_base_zswap_max_pool_percent:
+        type: "int"
+      linux_base_sysctl_enabled:
+        type: "bool"
+        default: false
+      linux_base_sysctl_reload:
+        type: "bool"
+        default: true
+      linux_base_sysctl_options:
+        type: "list"
+        elements: "dict"
+        default: []
+        options:
+          name:
+            type: "str"
+            required: true
+          value:
+            type: "raw"
+          state:
+            type: "str"
+            choices: ["present", "absent"]
+            default: "present"
+      linux_base_reboot_enabled:
+        type: "bool"
+        default: false
+      linux_base_reboot_timeout:
+        type: "int"
+        default: 300

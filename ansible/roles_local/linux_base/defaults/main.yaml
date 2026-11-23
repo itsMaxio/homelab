@@ -1,0 +1,32 @@
+---
+## Qemu-guest-agent
+linux_base_qemu_guest_agent_enabled: false
+linux_base_qemu_guest_agent_state: "present"
+
+## Timezone
+linux_base_timezone_enabled: false
+# linux_base_timezone: "UTC"
+
+## Swap
+linux_base_swap_enabled: false
+linux_base_swap_state: "present"
+# linux_base_swap_file_path: "/swap"
+# linux_base_swap_file_size_mb: 2048
+# linux_base_swap_swappiness: 60  # 0-200
+linux_base_swap_sysctl_file: "/etc/sysctl.d/60-swap.conf"
+
+## Zswap
+linux_base_zswap_enabled: false
+linux_base_zswap_state: "present"
+# linux_base_zswap_compressor: "zstd"  # lz4, lzo, lzo-rle, deflate
+# linux_base_zswap_zpool: "zsmalloc"  # zbud, z3fold
+# linux_base_zswap_max_pool_percent: 20  # 0-100
+
+## Sysctl
+linux_base_sysctl_enabled: false
+linux_base_sysctl_options: []
+linux_base_sysctl_reload: true
+
+## Reboot Handler
+linux_base_reboot_enabled: false
+linux_base_reboot_timeout: 300

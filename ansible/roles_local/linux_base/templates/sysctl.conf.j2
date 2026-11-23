@@ -1,0 +1,7 @@
+# Managed by Ansible (linux_base role)
+
+{% for item in linux_base_sysctl_options %}
+{% if item.state | default("present") == "present" %}
+{{ item.name }} = {{ item.value }}
+{% endif %}
+{% endfor %}

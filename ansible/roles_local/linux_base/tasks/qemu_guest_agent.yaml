@@ -1,0 +1,36 @@
+---
+- name: "DEBUG : QEMU Guest Agent variables"
+  ansible.builtin.debug:
+    msg:
+      - "enabled: {{ linux_base_qemu_guest_agent_enabled }}"
+      - "state: {{ linux_base_qemu_guest_agent_state }}"
+  tags: [never, debug]
+
+- name: Manage QEMU Guest Agent
+  when: linux_base_qemu_guest_agent_enabled | bool
+  tags: [linux_base, qemu_guest_agent]
+  block:
+    - name: Manage qemu-guest-agent package
+      ansible.builtin.apt:
+        name: "qemu-guest-agent"
+        state: "{{ linux_base_qemu_guest_agent_state }}"
+        purge: "{{ linux_base_qemu_guest_agent_state == 'absent' }}"
+        update_cache: "{{ linux_base_qemu_guest_agent_state != 'absent' }}"
+        cache_valid_time: 3600
+      ignore_errors: "{{ ansible_check_mode }}"
+
+    - name: Check if QEMU virtio serial port exists
+      ansible.builtin.stat:
+        path: "/dev/virtio-ports/org.qemu.guest_agent.0"
+      register: _linux_base_qemu_virtio_port
+      when: linux_base_qemu_guest_agent_state == "present"
+
+    - name: Ensure qemu-guest-agent service is running
+      ansible.builtin.systemd_service:
+        name: "qemu-guest-agent"
+        enabled: true
+        state: "started"
+      when:
+        - linux_base_qemu_guest_agent_state == "present"
+        - _linux_base_qemu_virtio_port.stat.exists
+      ignore_errors: "{{ ansible_check_mode }}"

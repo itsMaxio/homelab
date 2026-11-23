@@ -1,0 +1,86 @@
+---
+- name: "DEBUG : Swap and zswap variables"
+  ansible.builtin.debug:
+    msg:
+      - "swap_enabled: {{ linux_base_swap_enabled }}"
+      - "swap_state: {{ linux_base_swap_state }}"
+      - "swap_file_path: {{ linux_base_swap_file_path | default(None) }}"
+      - "swap_file_size_mb: {{ linux_base_swap_file_size_mb | default(None) }}"
+      - "swap_swappiness: {{ linux_base_swap_swappiness | default(None) }}"
+      - "swap_sysctl_file: {{ linux_base_swap_sysctl_file }}"
+      - "zswap_enabled: {{ linux_base_zswap_enabled }}"
+      - "zswap_state: {{ linux_base_zswap_state }}"
+      - "zswap_compressor: {{ linux_base_zswap_compressor | default(None) }}"
+      - "zswap_zpool: {{ linux_base_zswap_zpool | default(None) }}"
+      - "zswap_max_pool_percent: {{ linux_base_zswap_max_pool_percent | default(None) }}"
+  tags: [never, debug]
+
+- name: Manage swap file via geerlingguy.swap
+  when: linux_base_swap_enabled | bool
+  tags: [linux_base, swap]
+  block:
+    - name: Include geerlingguy.swap role
+      ansible.builtin.include_role:
+        name: "geerlingguy.swap"
+        apply:
+          tags: [linux_base, swap]
+      vars:
+        swap_file_path: "{{ linux_base_swap_file_path }}"
+        swap_file_size_mb: "{{ (linux_base_swap_file_size_mb | string) if linux_base_swap_state == 'present' else '' }}"
+        swap_swappiness: "{{ (linux_base_swap_swappiness | string) if linux_base_swap_state == 'present' else '' }}"
+        swap_sysctl_file: "{{ linux_base_swap_sysctl_file }}"
+        swap_file_state: "{{ linux_base_swap_state }}"
+        swap_test_mode: "{{ ansible_facts['virtualization_type'] | default('') in ['docker', 'podman', 'container'] }}"
+
+    - name: Remove swap sysctl config file
+      ansible.builtin.file:
+        path: "{{ linux_base_swap_sysctl_file }}"
+        state: "absent"
+      when: linux_base_swap_state == "absent"
+
+- name: Manage zswap via systemd service
+  when: linux_base_zswap_enabled | bool
+  tags: [linux_base, swap, zswap]
+  block:
+    - name: Create systemd unit file for zswap
+      ansible.builtin.template:
+        src: "zswap.service.j2"
+        dest: "/etc/systemd/system/zswap.service"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+      when: linux_base_zswap_state == "present"
+      notify: "Restart zswap service"
+
+    - name: Enable and start zswap service
+      ansible.builtin.systemd_service:
+        name: "zswap.service"
+        enabled: true
+        state: "started"
+        daemon_reload: true
+      when:
+        - linux_base_zswap_state == "present"
+        - ansible_facts['virtualization_type'] | default('') not in ['docker', 'podman', 'container']
+
+    - name: Check if zswap systemd unit exists
+      ansible.builtin.stat:
+        path: "/etc/systemd/system/zswap.service"
+      register: _linux_base_zswap_unit
+      when: linux_base_zswap_state == "absent"
+
+    - name: Stop and disable zswap service
+      ansible.builtin.systemd_service:
+        name: "zswap.service"
+        enabled: false
+        state: "stopped"
+      when:
+        - linux_base_zswap_state == "absent"
+        - _linux_base_zswap_unit.stat.exists
+        - ansible_facts['virtualization_type'] | default('') not in ['docker', 'podman', 'container']
+
+    - name: Remove systemd unit file for zswap
+      ansible.builtin.file:
+        path: "/etc/systemd/system/zswap.service"
+        state: "absent"
+      when: linux_base_zswap_state == "absent"
+      notify: "Reload systemd"

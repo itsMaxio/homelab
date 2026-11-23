@@ -1,0 +1,18 @@
+# Managed by Ansible (linux_base)
+[Unit]
+Description=Configure zswap kernel parameters
+After=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/modprobe {{ linux_base_zswap_compressor }}
+ExecStart=/usr/sbin/modprobe {{ linux_base_zswap_zpool }}
+ExecStart=/bin/bash -c 'echo {{ linux_base_zswap_compressor }} > /sys/module/zswap/parameters/compressor'
+ExecStart=/bin/bash -c 'echo {{ linux_base_zswap_zpool }} > /sys/module/zswap/parameters/zpool'
+ExecStart=/bin/bash -c 'echo {{ linux_base_zswap_max_pool_percent }} > /sys/module/zswap/parameters/max_pool_percent'
+ExecStart=/bin/bash -c 'echo 1 > /sys/module/zswap/parameters/enabled'
+ExecStop=/bin/bash -c 'echo 0 > /sys/module/zswap/parameters/enabled'
+
+[Install]
+WantedBy=multi-user.target

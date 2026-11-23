@@ -1,0 +1,16 @@
+---
+- name: "DEBUG : Timezone variables"
+  ansible.builtin.debug:
+    msg:
+      - "enabled: {{ linux_base_timezone_enabled }}"
+      - "timezone: {{ linux_base_timezone | default(None) }}"
+  tags: [never, debug]
+
+- name: Configure system timezone
+  when: linux_base_timezone_enabled | bool
+  tags: [linux_base, timezone]
+  block:
+    - name: Set system timezone
+      community.general.timezone:
+        name: "{{ linux_base_timezone }}"
+      notify: "Reboot host"

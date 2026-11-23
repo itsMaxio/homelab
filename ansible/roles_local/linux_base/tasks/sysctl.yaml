@@ -1,0 +1,40 @@
+---
+- name: "DEBUG : Sysctl variables"
+  ansible.builtin.debug:
+    msg:
+      - "enabled: {{ linux_base_sysctl_enabled }}"
+      - "options: {{ linux_base_sysctl_options }}"
+      - "reload: {{ linux_base_sysctl_reload }}"
+  tags: [never, debug]
+
+- name: Manage sysctl
+  when: linux_base_sysctl_enabled | bool
+  tags: [linux_base, sysctl]
+  block:
+    - name: Check if sysctl options exist
+      ansible.builtin.stat:
+        path: "/proc/sys/{{ item.name | replace('.', '/') }}"
+      register: _linux_base_sysctl_check
+      loop: "{{ linux_base_sysctl_options }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: item.state | default('present') == "present"
+
+    - name: Fail if sysctl option does not exist
+      ansible.builtin.fail:
+        msg: "Sysctl option '{{ item.item.name }}' does not exist"
+      loop: "{{ _linux_base_sysctl_check.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when:
+        - item.stat is defined
+        - not item.stat.exists
+
+    - name: Deploy sysctl config
+      ansible.builtin.template:
+        src: "sysctl.conf.j2"
+        dest: "/etc/sysctl.d/99-linux-base.conf"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+      notify: "Reload sysctl"
