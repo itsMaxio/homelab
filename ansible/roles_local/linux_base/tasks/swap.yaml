@@ -11,7 +11,6 @@
       - "zswap_enabled: {{ linux_base_zswap_enabled }}"
       - "zswap_state: {{ linux_base_zswap_state }}"
       - "zswap_compressor: {{ linux_base_zswap_compressor | default(None) }}"
-      - "zswap_zpool: {{ linux_base_zswap_zpool | default(None) }}"
       - "zswap_max_pool_percent: {{ linux_base_zswap_max_pool_percent | default(None) }}"
   tags: [never, debug]
 
@@ -61,6 +60,7 @@
       when:
         - linux_base_zswap_state == "present"
         - ansible_facts['virtualization_type'] | default('') not in ['docker', 'podman', 'container']
+        - not ansible_check_mode
 
     - name: Check if zswap systemd unit exists
       ansible.builtin.stat:

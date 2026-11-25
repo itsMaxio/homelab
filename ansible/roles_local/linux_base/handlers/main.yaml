@@ -9,7 +9,9 @@
     name: "zswap.service"
     state: "restarted"
     daemon_reload: true
-  when: ansible_facts['virtualization_type'] | default('') not in ['docker', 'podman', 'container']
+  when:
+    - ansible_facts['virtualization_type'] | default('') not in ['docker', 'podman', 'container']
+    - not ansible_check_mode
 
 - name: Reload sysctl
   ansible.builtin.command:

@@ -1,4 +1,8 @@
 ---
+- name: Hostname task list include
+  ansible.builtin.include_tasks: "hostname.yaml"
+  tags: [linux_base, hostname, debug]
+
 - name: QEMU Guest Agent task list include
   ansible.builtin.include_tasks: "qemu_guest_agent.yaml"
   tags: [linux_base, qemu_guest_agent, debug]

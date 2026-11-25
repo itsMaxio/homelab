@@ -3,6 +3,15 @@ argument_specs:
   main:
     short_description: "Configures baseline system settings on Linux hosts"
     options:
+      linux_base_hostname_enabled:
+        type: "bool"
+        default: false
+      linux_base_hostname:
+        type: "str"
+        required: false
+      linux_base_fqdn:
+        type: "str"
+        required: false
       linux_base_qemu_guest_agent_enabled:
         type: "bool"
         default: false
@@ -41,9 +50,6 @@ argument_specs:
       linux_base_zswap_compressor:
         type: "str"
         choices: ["zstd", "lz4", "lzo", "lzo-rle", "deflate"]
-      linux_base_zswap_zpool:
-        type: "str"
-        choices: ["zsmalloc", "zbud", "z3fold"]
       linux_base_zswap_max_pool_percent:
         type: "int"
       linux_base_sysctl_enabled:

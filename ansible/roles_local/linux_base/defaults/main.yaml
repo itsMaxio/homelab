@@ -1,4 +1,9 @@
 ---
+## Hostname and FQDN
+linux_base_hostname_enabled: false
+# linux_base_hostname: "vm-docker"
+# linux_base_fqdn: "vm-docker.example.com"
+
 ## Qemu-guest-agent
 linux_base_qemu_guest_agent_enabled: false
 linux_base_qemu_guest_agent_state: "present"
@@ -19,7 +24,6 @@ linux_base_swap_sysctl_file: "/etc/sysctl.d/60-swap.conf"
 linux_base_zswap_enabled: false
 linux_base_zswap_state: "present"
 # linux_base_zswap_compressor: "zstd"  # lz4, lzo, lzo-rle, deflate
-# linux_base_zswap_zpool: "zsmalloc"  # zbud, z3fold
 # linux_base_zswap_max_pool_percent: 20  # 0-100
 
 ## Sysctl

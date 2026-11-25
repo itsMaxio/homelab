@@ -17,7 +17,7 @@
         purge: "{{ linux_base_qemu_guest_agent_state == 'absent' }}"
         update_cache: "{{ linux_base_qemu_guest_agent_state != 'absent' }}"
         cache_valid_time: 3600
-      ignore_errors: "{{ ansible_check_mode }}"
+      when: not ansible_check_mode
 
     - name: Check if QEMU virtio serial port exists
       ansible.builtin.stat:
@@ -33,4 +33,4 @@
       when:
         - linux_base_qemu_guest_agent_state == "present"
         - _linux_base_qemu_virtio_port.stat.exists
-      ignore_errors: "{{ ansible_check_mode }}"
+        - not ansible_check_mode

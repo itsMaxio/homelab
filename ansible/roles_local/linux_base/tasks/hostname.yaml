@@ -1,0 +1,25 @@
+---
+- name: "DEBUG : Hostname variables"
+  ansible.builtin.debug:
+    msg:
+      - "enabled: {{ linux_base_hostname_enabled }}"
+      - "hostname: {{ linux_base_hostname | default(None) }}"
+      - "fqdn: {{ linux_base_fqdn | default(None) }}"
+  tags: [never, debug]
+
+- name: Configure system hostname and FQDN
+  when: linux_base_hostname_enabled | bool
+  tags: [linux_base, hostname]
+  block:
+    - name: Set system hostname
+      ansible.builtin.hostname:
+        name: "{{ linux_base_hostname }}"
+      when: ansible_facts['virtualization_type'] | default('') not in ['docker', 'podman', 'container']
+      notify: "Reboot host"
+
+    - name: Configure 127.0.1.1 entry in /etc/hosts
+      ansible.builtin.lineinfile:
+        path: "/etc/hosts"
+        regexp: '^127\.0\.1\.1\s+'
+        line: "{{ ['127.0.1.1', linux_base_fqdn | default(''), linux_base_hostname] | select | join(' ') }}"
+        state: "present"
