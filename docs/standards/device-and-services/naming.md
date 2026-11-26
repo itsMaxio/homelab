@@ -1,6 +1,6 @@
 # Device and Services Naming Conventions
 
-This document provides naming guidelines and templates for devices and services in the homelab. Names can change over time and actual values are stored in a Single Source of Truth such as Netbox
+This document provides naming guidelines and templates for devices and services in the homelab. Names can change over time and actual values are stored in a Single Source of Truth such as Netbox.
 
 Core rules:
 
@@ -11,15 +11,15 @@ Core rules:
 
 ## Devices
 
-The device format is `device-role-number` or `device-number` if a role is not required. The `device` value represents the platform type. The `role` value defines its primary function. The `number` value represents a two digit sequential index like `01` or `02`
+The device format is `device-role-number` or `device-number` if a role is not required. The `device` value represents the platform type. The `role` value defines its primary function. The `number` value represents a two digit sequential index like `01` or `02`.
 
 ### Switches
 
-Switch names start with `sw`
+Switch names start with `sw`.
 
 Switch roles:
 
-- `core` for the main switch that connects routers and hypervisor
+- `core` for the main switch that connects routers and hypervisors
 - `acc` for access switches that connect end devices
 
 Examples:
@@ -30,7 +30,7 @@ Examples:
 
 ### Firewalls
 
-Firewall names start with `fw`. Firewalls do not use a role in their name
+Firewall names start with `fw`. Firewalls do not use a role in their name.
 
 Examples:
 
@@ -38,7 +38,7 @@ Examples:
 
 ### Access Points
 
-Access points start with `ap`
+Access points start with `ap`.
 
 Examples:
 
@@ -47,7 +47,7 @@ Examples:
 
 ### NAS Devices
 
-NAS devices start with `nas`
+NAS devices start with `nas`.
 
 Examples:
 
@@ -56,7 +56,7 @@ Examples:
 
 ### Hypervisors
 
-Proxmox hosts start with `pve`
+Proxmox hosts start with `pve`.
 
 Examples:
 
@@ -65,7 +65,7 @@ Examples:
 
 ### Virtual Machines and Containers
 
-Virtual machines start with `vm`. LXC containers start with `lxc`
+Virtual machines start with `vm`. LXC containers start with `lxc`.
 
 Generic roles:
 
@@ -81,3 +81,18 @@ Examples:
 - `vm-docker-01`
 - `vm-zabbix-01`
 - `lxc-dns-01`
+
+### Virtual Private Servers
+
+Virtual private servers start with `vps`. General purpose servers do not use a role in their name.
+
+VPS roles:
+
+- `docker` for servers running Docker engine
+- `proxy` for reverse proxy servers
+
+Examples:
+
+- `vps-01`
+- `vps-docker-01`
+- `vps-proxy-01`
